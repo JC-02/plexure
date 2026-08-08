@@ -1,0 +1,47 @@
+{
+  "name": "plexure",
+  "version": "0.0.1",
+  "description": "A drifting field of points connected by lines, reacting to the pointer. Scope it to the viewport, a page, any element, or an arbitrary shape. Under 5 kB, zero dependencies.",
+  "license": "MIT",
+  "author": "Jordan Cowan (https://github.com/JC-02)",
+  "homepage": "https://plexure.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JC-02/plexure.git",
+    "directory": "packages/core"
+  },
+  "keywords": [
+    "particles",
+    "constellation",
+    "plexus",
+    "canvas",
+    "background",
+    "animation",
+    "interactive",
+    "lightweight",
+    "zero-dependency"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/index.global.js",
+  "jsdelivr": "./dist/index.global.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

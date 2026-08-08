@@ -1,0 +1,52 @@
+{
+  "name": "@plexure/react",
+  "version": "0.0.1",
+  "description": "React bindings for plexure — a drifting field of points connected by lines, reacting to the pointer.",
+  "license": "MIT",
+  "author": "Jordan Cowan (https://github.com/JC-02)",
+  "homepage": "https://plexure.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JC-02/plexure.git",
+    "directory": "packages/react"
+  },
+  "keywords": [
+    "particles",
+    "constellation",
+    "plexus",
+    "canvas",
+    "react",
+    "background"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "plexure": "^0.0.1"
+  },
+  "peerDependencies": {
+    "react": ">=17"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0"
+  }
+}
