@@ -1,7 +1,7 @@
 # plexure
 
 A drifting field of points connected by lines, reacting to the pointer. Scope it to the
-viewport, the full page, any element — or clip it to an arbitrary shape. Under 5 kB
+viewport, the full page, any element, or clip it to an arbitrary shape. Under 5 kB
 gzipped, zero dependencies.
 
 This is the monorepo. The packages:
@@ -11,7 +11,7 @@ This is the monorepo. The packages:
 | [`plexure`](packages/core) | The engine. Zero dependencies. |
 | [`@plexure/react`](packages/react) | Thin React bindings. |
 
-Docs and playground: [plexure.dev](https://plexure.dev) *(coming with v0.3)*
+Docs and playground: [plexure.dev](https://plexure.dev) *(coming soon)*
 
 ## Development
 
