@@ -141,3 +141,23 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Local notes, not shared
+CLAUDE.local.md
+tmp/
+
+# Claude Code workspace (local settings and permissions)
+.claude/
+
+# Tooling caches
+.turbo/
+.tsup/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor state
+.vscode/
+.idea/
