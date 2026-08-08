@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>1 · Full page — plexure harness</title>
+  <link rel="stylesheet" href="harness.css" />
+</head>
+<body>
+  <main>
+    <p class="crumb"><a href="index.html">← harness</a> · test 1: 'page' target</p>
+    <h1>The Cartographer's Apprentice</h1>
+    <p><em>A field spanning the entire scrollable document sits behind this article. It should
+    follow you for the full scroll height, react to the pointer everywhere, and never
+    interfere with reading or selecting this text.</em></p>
+
+    <h2>I. The workshop</h2>
+    <p>The workshop smelled of cedar shavings and lamp oil. Maps covered every wall — some
+    finished and varnished, others half-drawn, coastlines trailing off into speculation.
+    The apprentice's job, for the first year, was only to grind pigments and rule border
+    lines, and to never, under any circumstances, touch the master's compass.</p>
+    <p>Naturally, the compass was all she thought about. It sat on the high shelf in a case
+    of brass and bottle-green glass, and on certain evenings, when the light came through
+    the west window at a particular angle, she was almost sure the needle moved on its own.</p>
+
+    <h2>II. Concerning borders</h2>
+    <p>A border, the master liked to say, is a fiction agreed upon by people who have never
+    seen it. Rivers move. Mountains erode. The line holds because the map says it holds.
+    This is why cartography is closer to law than to painting, and why a careless
+    cartographer is more dangerous than a careless judge.</p>
+    <blockquote><p>"Draw what is there. Where nothing is there, say so honestly — an empty
+    quarter drawn empty is worth more than a beautiful invention."</p></blockquote>
+    <p>She copied the maxim into her notebook, and then, because the margin looked bare,
+    illustrated it with a small sea serpent. Some instincts cannot be trained away.</p>
+
+    <h2>III. The commission</h2>
+    <p>The letter arrived on a Tuesday, sealed with wax the colour of dried blood. A survey
+    of the northern archipelago — forty islands, some charted only by rumour. Payment
+    generous. Departure immediate. The master read it twice, folded it once, and looked at
+    the high shelf for a long moment.</p>
+    <ul>
+      <li>Six crates of instruments, packed in straw</li>
+      <li>Paper stock for two hundred sheets, oilcloth-wrapped</li>
+      <li>The good ink, and the cheap ink for drafts</li>
+      <li>The compass, case and all — handed to the apprentice to carry</li>
+    </ul>
+    <p>She held it the way one holds a sleeping animal. The needle, she noticed, was not
+    pointing north. It was pointing at her.</p>
+
+    <h2>IV. Filler, honestly labelled</h2>
+    <p>From here down the content exists to make the page tall. Scroll through it and watch
+    the field: density should feel uniform top to bottom, the pointer should link wherever
+    you are, and there should be no seam, no band of emptiness, and no scrollbar jump when
+    the page ends.</p>
+    <p>Paragraph of filler one. Lorem-adjacent text that nobody needs to read, present so
+    that the document reaches a realistic article length and the 'page' field has real
+    scroll distance to cover.</p>
+    <p>Paragraph of filler two. The field behind this text is one instance, one canvas, one
+    animation loop — not a per-viewport trick. Resize the window here and check that the
+    canvas re-measures to the new document height.</p>
+    <p>Paragraph of filler three. Select this paragraph with the mouse. Selection should
+    work exactly as on any page; the canvas never intercepts pointer events.</p>
+    <p>Paragraph of filler four. Middle-click autoscroll, if your mouse does that, should
+    also behave normally.</p>
+    <p>Paragraph of filler five. Nearly there.</p>
+    <h2>V. End of the page</h2>
+    <p>The field should end exactly at the bottom of this content — no extra scroll space
+    below this paragraph. (That specifically tests the height-ratchet fix.)</p>
+  </main>
+
+  <script src="../../packages/core/dist/index.global.js"></script>
+  <script>
+    window.field = plexure.createPlexure('page', {
+      star: { color: 'var(--ink)' },
+      link: { color: 'var(--ink)' },
+      cursor: { color: 'var(--accent)' },
+    });
+  </script>
+</body>
+</html>

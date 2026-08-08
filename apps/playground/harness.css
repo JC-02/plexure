@@ -1,0 +1,46 @@
+:root {
+  color-scheme: dark;
+  --ink: #ebe9e4;
+  --bg: #0e1116;
+  --card: #171c24;
+  --accent: #7fd4c1;
+  --blue: #8ab8ff;
+  --rose: #f2b8c6;
+  --gold: #e8c47a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.6 system-ui, sans-serif;
+  min-height: 100vh;
+}
+main { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+h1 { font-size: 2rem; margin: 0 0 0.25rem; }
+h2 { margin: 3rem 0 0.75rem; }
+h3 { margin: 1.5rem 0 0.5rem; }
+p { max-width: 68ch; opacity: 0.85; }
+a { color: var(--accent); }
+.crumb { font-size: 0.85rem; opacity: 0.7; margin-bottom: 2rem; }
+.note { font-size: 0.85rem; opacity: 0.65; max-width: 60ch; }
+.row { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start; margin-top: 1.25rem; }
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 1.25rem;
+  overflow: hidden;
+}
+.card > * { position: relative; z-index: 1; }
+.caption { font-size: 0.8rem; opacity: 0.6; margin-top: 0.5rem; max-width: 240px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 1.25rem; }
+button, input, select {
+  font: inherit;
+  color: var(--ink);
+  background: #232a35;
+  border: 1px solid #333c4a;
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+}
+button:hover { background: #2c3543; cursor: pointer; }
+label { font-size: 0.85rem; opacity: 0.8; }

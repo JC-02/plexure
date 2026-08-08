@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>5 · Configurations — plexure harness</title>
+  <link rel="stylesheet" href="harness.css" />
+  <style>
+    .cfg { height: 230px; }
+    .controls { position: sticky; top: 0; z-index: 10; background: rgba(14,17,22,0.92); border-bottom: 1px solid #232a35; padding: 0.75rem 2rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="controls" data-plexure-ignore>
+    <button id="pauseAll">Pause all</button>
+    <button id="resumeAll">Resume all</button>
+    <button id="destroyAll">Destroy all</button>
+    <button id="recreateAll">Recreate all</button>
+    <label>intensity <input id="intensity" type="range" min="0" max="1" step="0.05" value="1" /></label>
+    <span class="note" id="status"></span>
+  </div>
+  <main>
+    <p class="crumb"><a href="index.html">← harness</a> · test 5: field configurations</p>
+    <h1>Field configurations</h1>
+    <p>Every card is one config permutation. The sticky bar drives all of them live through
+    the handle API — pause, resume, destroy/recreate (leak check), and a global intensity
+    slider (eased, so it fades rather than snaps). Future "skins" (glow, shimmer, pulse,
+    rainbow) are noted in the roadmap; softness below is the first step toward glow.</p>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <script src="../../packages/core/dist/index.global.js"></script>
+  <script>
+    const CONFIGS = [
+      ['defaults', {}],
+      ['big stars', { star: { size: [2.2, 4.5] }, density: 16000 }],
+      ['tiny dense', { star: { size: [0.4, 1] }, density: 3500, link: { opacity: 0.25 } }],
+      ['soft glow (softness 0.8)', { star: { softness: 0.8, size: [1.5, 3] }, density: 9000 }],
+      ['gold on teal links', { star: { color: '#e8c47a' }, link: { color: '#7fd4c1', opacity: 0.5 }, cursor: { color: '#e8c47a' } }],
+      ['rose + blue links', { star: { color: '#f2b8c6' }, link: { color: '#8ab8ff', opacity: 0.5 }, cursor: { color: '#f2b8c6' } }],
+      ['high link opacity', { link: { opacity: 0.8 } }],
+      ['whisper (all low opacity)', { star: { opacity: 0.25 }, link: { opacity: 0.12 }, cursor: { opacity: 0.3 } }],
+      ['fast drift', { drift: [1.6, 3.0] }],
+      ['near-still', { drift: [0.05, 0.12] }],
+      ['long links 45%', { link: { distance: '45%' } }],
+      ['short links 40px', { link: { distance: 40 } }],
+      ['edge: fade', { edgeBehaviour: 'fade', edgeDistance: 36 }],
+      ['edge: respawn', { edgeBehaviour: 'respawn' }],
+      ['edge: wrap (default)', { edgeBehaviour: 'wrap' }],
+      ['fixed count: 12', { count: 12 }],
+      ['cursor disabled', { cursor: { enabled: false } }],
+      ['strong pull', { cursor: { strength: 0.18, radius: '80%' } }],
+      ['seed 42 — twin A', { seed: 42 }],
+      ['seed 42 — twin B (must match A exactly)', { seed: 42 }],
+      ['half intensity', { intensity: 0.5 }],
+      ['thick links', { link: { width: 1.6, opacity: 0.4 } }],
+    ];
+    const grid = document.getElementById('grid');
+    let fields = [];
+    const build = () => {
+      grid.innerHTML = '';
+      fields = CONFIGS.map(([label, opts]) => {
+        const el = document.createElement('div');
+        el.className = 'card cfg';
+        el.innerHTML = `<p class="caption">${label}</p>`;
+        grid.appendChild(el);
+        return plexure.createPlexure(el, JSON.parse(JSON.stringify(opts)));
+      });
+      status.textContent = fields.length + ' fields, one shared loop';
+    };
+    const status = document.getElementById('status');
+    build();
+    document.getElementById('pauseAll').onclick = () => fields.forEach((f) => f.pause());
+    document.getElementById('resumeAll').onclick = () => fields.forEach((f) => f.resume());
+    document.getElementById('destroyAll').onclick = () => { fields.forEach((f) => f.destroy()); status.textContent = 'destroyed — canvases: ' + document.querySelectorAll('canvas').length; };
+    document.getElementById('recreateAll').onclick = build;
+    document.getElementById('intensity').oninput = (e) => fields.forEach((f) => f.setOptions({ intensity: Number(e.target.value) }));
+    window.fields = fields;
+  </script>
+</body>
+</html>

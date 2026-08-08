@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>4 · Shapes — plexure harness</title>
+  <link rel="stylesheet" href="harness.css" />
+  <style>
+    .shape { background: var(--card); display: grid; place-items: center; }
+    .shape span { position: relative; z-index: 1; font-size: 0.75rem; opacity: 0.6; text-align: center; padding: 0 0.5rem; }
+    .sq { display: grid; place-items: center; background: var(--card); border-radius: 8px; }
+    .sq span { position: relative; z-index: 1; font-size: 0.65rem; opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="crumb"><a href="index.html">← harness</a> · test 4: custom polygon shapes</p>
+    <h1>Custom polygon shapes</h1>
+    <p>Every shape below is a normal element with a CSS <code>clip-path</code>, passed to the
+    field as <code>clipTo</code> so the canvas clips to the same shape. The simulation still
+    runs in the bounding box (sim-aware clipping is the v0.2 feature) — what you are testing
+    here is that the <em>visual</em> clip is exact, corners and concave edges included, and
+    that the pointer reaction works inside the visible shape.</p>
+
+    <h2>Geometric</h2>
+    <div class="row" id="geometric"></div>
+
+    <h2>Unorthodox — concave corners, notches, extremes</h2>
+    <div class="row" id="unorthodox"></div>
+
+    <h2>Slivers and extremes</h2>
+    <p class="note">Degenerate aspect ratios. Watch for particles bunching, links spanning
+    the short axis wall-to-wall, and the cursor pull overwhelming the space.</p>
+    <div class="row" id="slivers"></div>
+
+    <h2>Minimum size series</h2>
+    <p class="note">Same default config at shrinking sizes. The count floor (minCount: 24)
+    means small boxes get proportionally denser — judge where it stops looking good. That
+    observed threshold becomes our documented minimum recommendation, and below whatever
+    you pick we can also consider auto-degrading (fewer particles, no links).</p>
+    <div class="row" id="sizes"></div>
+  </main>
+
+  <script src="../../packages/core/dist/index.global.js"></script>
+  <script>
+    const shapes = [
+      // [label, width, height, clip-path, colour]
+      ['hexagon', 260, 230, 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)', '#7fd4c1'],
+      ['triangle', 240, 210, 'polygon(50% 0%, 100% 100%, 0% 100%)', '#8ab8ff'],
+      ['circle', 230, 230, 'circle(50% at 50% 50%)', '#e8c47a'],
+      ['ellipse', 300, 180, 'ellipse(50% 50% at 50% 50%)', '#f2b8c6'],
+      ['diamond', 220, 220, 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', '#b39ddb'],
+      ['trapezoid', 280, 190, 'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)', '#80cbc4'],
+    ];
+    const unorthodox = [
+      ['five-point star', 260, 250, 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)', '#ffd54f'],
+      ['arrow / chevron', 280, 170, 'polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)', '#7fd4c1'],
+      ['plus / cross', 240, 240, 'polygon(33% 0%, 66% 0%, 66% 33%, 100% 33%, 100% 66%, 66% 66%, 66% 100%, 33% 100%, 33% 66%, 0% 66%, 0% 33%, 33% 33%)', '#8ab8ff'],
+      ['L-shape', 250, 250, 'polygon(0% 0%, 45% 0%, 45% 55%, 100% 55%, 100% 100%, 0% 100%)', '#f2b8c6'],
+      ['T-shape', 250, 240, 'polygon(0% 0%, 100% 0%, 100% 30%, 65% 30%, 65% 100%, 35% 100%, 35% 30%, 0% 30%)', '#e8c47a'],
+      ['notched banner', 300, 160, 'polygon(0% 0%, 100% 0%, 100% 100%, 50% 78%, 0% 100%)', '#b39ddb'],
+      ['concave blob (path)', 280, 240, "path('M140 8 C 210 8 272 60 272 120 C 272 150 240 152 228 178 C 214 208 232 232 140 232 C 48 232 8 190 8 120 C 8 50 70 8 140 8 Z')", '#80cbc4'],
+      ['zigzag edge', 300, 180, 'polygon(0% 0%, 100% 0%, 100% 80%, 87% 100%, 75% 80%, 62% 100%, 50% 80%, 37% 100%, 25% 80%, 12% 100%, 0% 80%)', '#ffab91'],
+    ];
+    const slivers = [
+      ['wide sliver 420×36', 420, 36, null, '#7fd4c1'],
+      ['tall sliver 56×300', 56, 300, null, '#8ab8ff'],
+      ['long thin diagonal', 380, 90, 'polygon(0% 100%, 100% 0%, 100% 30%, 0% 130%)', '#e8c47a'],
+    ];
+    const mount = (rowId, defs) => {
+      const row = document.getElementById(rowId);
+      for (const [label, w, h, clip, color] of defs) {
+        const el = document.createElement('div');
+        el.className = 'shape';
+        el.style.width = w + 'px';
+        el.style.height = h + 'px';
+        if (clip) el.style.clipPath = clip;
+        else el.style.borderRadius = '8px';
+        el.innerHTML = `<span>${label}</span>`;
+        row.appendChild(el);
+        plexure.createPlexure(el, {
+          star: { color }, link: { color, opacity: 0.5 }, cursor: { color },
+          density: 4500, clipTo: clip || null,
+        });
+      }
+    };
+    mount('geometric', shapes);
+    mount('unorthodox', unorthodox);
+    mount('slivers', slivers);
+
+    const sizesRow = document.getElementById('sizes');
+    for (const s of [200, 160, 120, 90, 60, 40, 24]) {
+      const el = document.createElement('div');
+      el.className = 'sq';
+      el.style.width = el.style.height = s + 'px';
+      el.innerHTML = `<span>${s}px</span>`;
+      sizesRow.appendChild(el);
+      plexure.createPlexure(el, {
+        star: { color: '#ebe9e4' }, link: { color: '#ebe9e4', opacity: 0.45 },
+        cursor: { color: '#7fd4c1' },
+      });
+    }
+  </script>
+</body>
+</html>

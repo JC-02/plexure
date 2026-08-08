@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>6 · Exclusions — plexure harness</title>
+  <link rel="stylesheet" href="harness.css" />
+  <style>
+    .demo { width: 460px; min-height: 300px; }
+    .panel { background: #101520; border: 1px solid #2a3341; border-radius: 10px; padding: 0.9rem; margin-top: 0.9rem; }
+    .ignored { outline: 1px dashed #e8c47a; outline-offset: 3px; }
+    form { display: flex; gap: 0.6rem; margin-top: 0.9rem; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="crumb"><a href="index.html">← harness</a> · tests 6–7: content above fields &amp; exclusion zones</p>
+    <h1>Content &amp; exclusions</h1>
+    <p>The canvas is always <code>pointer-events: none</code> and sits behind content, so it
+    can never block clicks, selection, or focus. On top of that, anything marked
+    <code>data-plexure-ignore</code> (dashed gold outline below) suppresses the hover
+    reaction while the pointer is on it — for controls or content the field should defer to.</p>
+
+    <h2>Default behaviour — content above, field reacts everywhere</h2>
+    <div class="row">
+      <div class="card demo" id="d1">
+        <strong>No exclusions</strong>
+        <p class="caption">Everything here is ordinary content. The field reacts even while
+        you hover the button or type in the input — and both keep working normally.</p>
+        <form onsubmit="return false" style="position:relative; z-index:1;">
+          <button type="button" onclick="this.textContent='clicked ✓'">Click me</button>
+          <input placeholder="type here" />
+        </form>
+      </div>
+    </div>
+
+    <h2>Excluded components — reaction stops over the marked zones</h2>
+    <div class="row">
+      <div class="card demo" id="d2">
+        <strong>Interactive exclusions</strong>
+        <p class="caption">The button and input below are marked. Moving onto them freezes
+        the pull and drops the cursor links; moving off resumes instantly.</p>
+        <form onsubmit="return false" style="position:relative; z-index:1;">
+          <button type="button" class="ignored" data-plexure-ignore onclick="this.textContent='still clickable ✓'">Ignored button</button>
+          <input class="ignored" data-plexure-ignore placeholder="ignored input" />
+        </form>
+      </div>
+      <div class="card demo" id="d3">
+        <strong>Non-interactive exclusion</strong>
+        <p class="caption">A plain stats panel, marked. Hovering the panel pauses the
+        reaction even though the panel does nothing itself. Children inherit the marker.</p>
+        <div class="panel ignored" data-plexure-ignore style="position:relative; z-index:1;">
+          <strong>Stats panel (ignored)</strong>
+          <p class="caption">uptime 99.99% · nodes 84 · links 212<br/>hover me — the field goes calm</p>
+        </div>
+      </div>
+    </div>
+
+    <h2>Edge cases to poke</h2>
+    <p class="note">
+      Drag a text selection that starts outside an ignored zone and ends inside it ·
+      tab-focus the ignored input via keyboard (reaction should NOT stop — it's pointer-based) ·
+      move quickly on/off the zone boundary and watch for flicker.
+    </p>
+  </main>
+
+  <script src="../../packages/core/dist/index.global.js"></script>
+  <script>
+    const mk = (id, color) => plexure.createPlexure(document.getElementById(id), {
+      star: { color }, link: { color, opacity: 0.45 }, cursor: { color }, density: 5000,
+    });
+    window.fields = { d1: mk('d1', '#7fd4c1'), d2: mk('d2', '#8ab8ff'), d3: mk('d3', '#f2b8c6') };
+  </script>
+</body>
+</html>

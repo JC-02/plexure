@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>3 · Containers — plexure harness</title>
+  <link rel="stylesheet" href="harness.css" />
+  <style>
+    .demo-card { width: 300px; height: 260px; }
+    .group {
+      background: transparent;
+      border-radius: 16px;
+      padding: 2rem;
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .group .ghost {
+      width: 260px; min-height: 200px;
+      background: rgba(23, 28, 36, 0.55);
+      border: 1px solid #2a3341;
+      border-radius: 12px;
+      padding: 1.25rem;
+      backdrop-filter: none;
+    }
+    .group .ghost > * { position: relative; z-index: 1; }
+    .group .window {
+      width: 260px; min-height: 200px;
+      background: transparent;
+      border: 1px solid #2a3341;
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .group .window > * { position: relative; z-index: 1; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="crumb"><a href="index.html">← harness</a> · test 3: basic container shapes</p>
+    <h1>Basic containers</h1>
+
+    <h2>Single container</h2>
+    <div class="row">
+      <div class="card demo-card" id="single">
+        <strong>One card, one field</strong>
+        <p class="caption">Safety clamps keep viewport-tuned defaults legible at 300px.</p>
+      </div>
+    </div>
+
+    <h2>Independent siblings — only one reacts at a time</h2>
+    <p class="note">Move the pointer between the three. Exactly the hovered card's field
+    reacts; the other two keep drifting undisturbed.</p>
+    <div class="row">
+      <div class="card demo-card" id="sib-1"><strong>Card 1</strong></div>
+      <div class="card demo-card" id="sib-2"><strong>Card 2</strong></div>
+      <div class="card demo-card" id="sib-3"><strong>Card 3</strong></div>
+    </div>
+
+    <h2>Joined group — one unified field behind several containers</h2>
+    <p class="note">A single field is mounted on the group wrapper; the "cards" are
+    translucent, so one continuous constellation flows behind all of them and through the
+    gaps. Links should cross card boundaries seamlessly, and the pointer works across the
+    whole group as one surface.</p>
+    <div class="group" id="group">
+      <div class="ghost"><strong>Alpha</strong><p class="caption">Same field behind all three.</p></div>
+      <div class="ghost"><strong>Beta</strong><p class="caption">Particles pass underneath the gaps.</p></div>
+      <div class="ghost"><strong>Gamma</strong><p class="caption">Hover anywhere in the group.</p></div>
+    </div>
+
+    <h2>Windowed group — one unified field showing through separate containers</h2>
+    <p class="note">The inverse of the joined group: one field spans the whole wrapper, but a
+    multi-subpath <code>path()</code> clip makes it visible only <em>inside</em> the three
+    windows — the gaps show nothing. Watch a particle drift out of one window and re-appear
+    in the next: it is the same continuous field passing behind the mask. The clip is
+    rebuilt live on resize via setOptions.</p>
+    <div class="group" id="windowed">
+      <div class="window"><strong>Window one</strong><p class="caption">Field visible only in here…</p></div>
+      <div class="window"><strong>Window two</strong><p class="caption">…and here…</p></div>
+      <div class="window"><strong>Window three</strong><p class="caption">…same field, passing through.</p></div>
+    </div>
+  </main>
+
+  <script src="../../packages/core/dist/index.global.js"></script>
+  <script>
+    const mk = (id, color, opts) => plexure.createPlexure(document.getElementById(id), {
+      star: { color }, link: { color, opacity: 0.45 }, cursor: { color }, density: 5000, ...opts,
+    });
+    window.fields = {
+      single: mk('single', '#8ab8ff'),
+      s1: mk('sib-1', '#7fd4c1'),
+      s2: mk('sib-2', '#e8c47a'),
+      s3: mk('sib-3', '#f2b8c6'),
+      group: mk('group', '#ebe9e4', { density: 9000 }),
+    };
+
+    // Windowed group: one field on the wrapper, clipped to the union of the child
+    // window rects via a multi-subpath path(). Rebuilt on resize through setOptions.
+    const windowed = document.getElementById('windowed');
+    const roundedRect = (x, y, w, h, r) =>
+      `M${x + r} ${y} h${w - 2 * r} a${r} ${r} 0 0 1 ${r} ${r} v${h - 2 * r} ` +
+      `a${r} ${r} 0 0 1 ${-r} ${r} h${2 * r - w} a${r} ${r} 0 0 1 ${-r} ${-r} ` +
+      `v${2 * r - h} a${r} ${r} 0 0 1 ${r} ${-r} Z`;
+    const windowsClip = () => {
+      const base = windowed.getBoundingClientRect();
+      const parts = [...windowed.querySelectorAll('.window')].map((el) => {
+        const r = el.getBoundingClientRect();
+        return roundedRect(r.left - base.left, r.top - base.top, r.width, r.height, 12);
+      });
+      return `path('${parts.join(' ')}')`;
+    };
+    fields.windowed = mk('windowed', '#7fd4c1', { density: 9000, clipTo: windowsClip() });
+    addEventListener('resize', () => fields.windowed.setOptions({ clipTo: windowsClip() }), { passive: true });
+  </script>
+</body>
+</html>

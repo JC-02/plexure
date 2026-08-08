@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2 · Sections — plexure harness</title>
+  <link rel="stylesheet" href="harness.css" />
+  <style>
+    section { padding: 3.5rem 2rem; }
+    section.fielded { border-block: 1px solid #232a35; }
+    .inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+    .nested-card { width: 300px; height: 220px; background: #101520; border-radius: 12px; padding: 1.25rem; margin-top: 1.5rem; }
+    .nested-card > * { position: relative; z-index: 1; }
+  </style>
+</head>
+<body>
+  <main style="max-width:none; padding:0;">
+    <div class="inner" style="padding: 3rem 2rem 0;">
+      <p class="crumb"><a href="index.html">← harness</a> · test 2: fields scoped to sections</p>
+      <h1>Partial view — section scoping</h1>
+      <p>Alternating sections. Only the marked ones carry a field, and each field must stay
+      strictly inside its own section: no bleed above or below the border lines, and the
+      pointer only reacts while inside that section.</p>
+    </div>
+
+    <section>
+      <div class="inner"><h2>Plain section (no field)</h2>
+      <p>Nothing should render behind this text. If particles appear here, scoping is broken.</p></div>
+    </section>
+
+    <section class="fielded" id="section-a">
+      <div class="inner"><h2>Fielded section A</h2>
+      <p>Field in the section's own colour. Move the pointer across the top and bottom
+      borders — the reaction must cut off exactly at the section edge (pointerenter /
+      pointerleave, not distance).</p></div>
+    </section>
+
+    <section>
+      <div class="inner"><h2>Plain section again</h2>
+      <p>Empty. The two neighbouring fields must not react while the pointer is here, even
+      within their cursor radius of the border.</p></div>
+    </section>
+
+    <section class="fielded" id="section-b">
+      <div class="inner">
+        <h2>Fielded section B — with a nested field</h2>
+        <p>This section has its own field <em>and</em> contains a card with a second,
+        independent field. Hovering the card must deactivate the section field (innermost
+        claim wins); leaving the card hands the pointer back to the section.</p>
+        <div class="nested-card" id="nested-card">
+          <strong>Nested field</strong>
+          <p class="caption">Hover here: only this card reacts. The section field around it goes inert.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="inner"><h2>Tail section</h2>
+      <p class="note">Resize the window with this page open: each section field should
+      re-measure to its own box only, with no cross-talk.</p></div>
+    </section>
+  </main>
+
+  <script src="../../packages/core/dist/index.global.js"></script>
+  <script>
+    const a = plexure.createPlexure(document.getElementById('section-a'), {
+      star: { color: 'var(--blue)' }, link: { color: 'var(--blue)', opacity: 0.4 },
+      cursor: { color: 'var(--blue)' }, density: 8000,
+    });
+    const b = plexure.createPlexure(document.getElementById('section-b'), {
+      star: { color: 'var(--accent)' }, link: { color: 'var(--accent)', opacity: 0.4 },
+      cursor: { color: 'var(--accent)' }, density: 8000,
+    });
+    const nested = plexure.createPlexure(document.getElementById('nested-card'), {
+      star: { color: 'var(--rose)' }, link: { color: 'var(--rose)', opacity: 0.55 },
+      cursor: { color: 'var(--rose)' }, density: 4000,
+    });
+    window.fields = { a, b, nested };
+  </script>
+</body>
+</html>

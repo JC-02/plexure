@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>plexure — test harness</title>
+  <link rel="stylesheet" href="harness.css" />
+</head>
+<body>
+  <main>
+    <h1>plexure test harness</h1>
+    <p>
+      Manual visual-testing hub for v0.1. Serve the repo root (<code>npx http-server .</code>)
+      and browse. A viewport field runs behind this hub as a baseline smoke test.
+    </p>
+
+    <div class="grid">
+      <a class="card" href="full-page.html"><strong>1 · Full page</strong>
+        <p class="caption">'page' target behind a real article: title, body text, filler content, long scroll.</p></a>
+      <a class="card" href="sections.html"><strong>2 · Partial view / sections</strong>
+        <p class="caption">Fields scoped to individual sections only, including a nested field inside a fielded section.</p></a>
+      <a class="card" href="containers.html"><strong>3 · Basic containers</strong>
+        <p class="caption">Single card, independent siblings (one reacts at a time), and a unified field behind a joined group.</p></a>
+      <a class="card" href="shapes.html"><strong>4 · Custom polygon shapes</strong>
+        <p class="caption">Hexagons, stars, L/T-shapes, blobs, slivers — plus a shrinking size series to find the practical minimum.</p></a>
+      <a class="card" href="configs.html"><strong>5 · Field configurations</strong>
+        <p class="caption">Star sizes, colours, opacities, softness, drift, edge behaviours, seeds — plus live pause/resume/intensity controls.</p></a>
+      <a class="card" href="exclusions.html"><strong>6/7 · Content &amp; exclusions</strong>
+        <p class="caption">Content above the field, interactive controls inside it, and data-plexure-ignore zones that suppress the hover reaction.</p></a>
+    </div>
+
+    <h2>Baseline checks on this page</h2>
+    <p class="note">
+      The hub itself runs a viewport-fixed field. Verify: pointer links follow the cursor
+      anywhere on the page · switching tabs pauses it (check with the FPS meter in DevTools)
+      · resizing reflows without a visible jump · text stays crisp above the canvas.
+    </p>
+  </main>
+
+  <script src="../../packages/core/dist/index.global.js"></script>
+  <script>
+    window.field = plexure.createPlexure('viewport', {
+      star: { color: 'var(--ink)' },
+      link: { color: 'var(--ink)' },
+      cursor: { color: 'var(--accent)' },
+    });
+  </script>
+</body>
+</html>

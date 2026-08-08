@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Speed tuning — plexure harness</title>
+  <link rel="stylesheet" href="harness.css" />
+  <style>
+    .cfg { height: 300px; width: 320px; }
+    .live { border: 1px solid #7fd4c1; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="crumb"><a href="index.html">← harness</a> · default speed tuning</p>
+    <h1>Default energy — pick by eye</h1>
+    <p>All fields are frame-rate-normalised now, so what you pick here looks the same on
+    every display. <strong>k</strong> multiplies drift speed and cursor pull, and speeds up
+    settling to match. k=1.0 is the mathematically-tuned original; <strong>k=2.73 is what
+    you were actually seeing on this 164 Hz monitor before the fix</strong>.</p>
+
+    <div class="row">
+      <div class="card cfg" id="k10"><strong>k = 1.0</strong><p class="caption">The 60 Hz-tuned constants. What every visitor saw on a 60 Hz screen before the fix.</p></div>
+      <div class="card cfg" id="k17"><strong>k = 1.7</strong><p class="caption">Middle ground.</p></div>
+      <div class="card cfg" id="k27"><strong>k = 2.73</strong><p class="caption">Your old on-screen energy — now baked in as the library default.</p></div>
+    </div>
+
+    <h2>Live dial</h2>
+    <div class="row">
+      <div class="card cfg live" id="klive"><strong id="klabel">k = 1.0</strong><p class="caption">Drag to taste; tell Claude the number.</p></div>
+      <div data-plexure-ignore style="align-self:center;">
+        <label>k <input id="k" type="range" min="0.5" max="3.5" step="0.05" value="1" style="width:260px" /></label>
+      </div>
+    </div>
+  </main>
+
+  <script src="../../packages/core/dist/index.global.js"></script>
+  <script>
+    // Velocities scale by k, accelerations by k², decay rates as exponents.
+    const forK = (k) => ({
+      drift: [0.18 * k, 0.48 * k],
+      cursor: { strength: 0.055 * k * k, color: 'var(--accent)' },
+      friction: Math.pow(0.985, k),
+      star: { color: 'var(--ink)' },
+      link: { color: 'var(--ink)' },
+      density: 7000,
+    });
+    plexure.createPlexure(document.getElementById('k10'), forK(1));
+    plexure.createPlexure(document.getElementById('k17'), forK(1.7));
+    plexure.createPlexure(document.getElementById('k27'), forK(2.73));
+    let live = plexure.createPlexure(document.getElementById('klive'), forK(1));
+    const label = document.getElementById('klabel');
+    let timer;
+    document.getElementById('k').oninput = (e) => {
+      const k = Number(e.target.value);
+      label.textContent = 'k = ' + k.toFixed(2);
+      // Drift only applies to newly spawned particles, so rebuild the field (debounced).
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        live.destroy();
+        live = plexure.createPlexure(document.getElementById('klive'), forK(k));
+      }, 150);
+    };
+  </script>
+</body>
+</html>
