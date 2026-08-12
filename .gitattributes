@@ -1,2 +1,5 @@
-# Normalise line endings: LF in the repo, native on checkout.
-* text=auto
+# Normalise line endings: LF in the repo *and* in the working copy.
+# `eol=lf` rather than native checkout, because Git for Windows defaults to
+# core.autocrlf=true, and biome treats a CRLF file as a format error — without it,
+# `npm run lint` fails on every file after a fresh clone on Windows.
+* text=auto eol=lf

@@ -70,6 +70,11 @@ web_modules/
 .env.*
 !.env.example
 
+# npm auth. `npm config set --location=project` and most CI publish snippets write the
+# registry _authToken straight into a project-local .npmrc, so never let one be committed.
+# Non-secret npm settings belong in package.json publishConfig instead.
+.npmrc
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
