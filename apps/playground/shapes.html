@@ -6,10 +6,19 @@
   <title>4 · Shapes — plexure harness</title>
   <link rel="stylesheet" href="harness.css" />
   <style>
+    /* Shapes vary in height; centre them so a row reads as a set rather than a ragged edge. */
+    .row { align-items: center; justify-content: center; }
     .shape { background: var(--card); display: grid; place-items: center; }
-    .shape span { position: relative; z-index: 1; font-size: 0.75rem; opacity: 0.6; text-align: center; padding: 0 0.5rem; }
     .sq { display: grid; place-items: center; background: var(--card); border-radius: 8px; }
-    .sq span { position: relative; z-index: 1; font-size: 0.65rem; opacity: 0.6; }
+    .shape-fig { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+    .shape-fig figcaption {
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.78rem;
+      text-align: center;
+      max-width: 100%;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+    }
   </style>
 </head>
 <body>
@@ -18,9 +27,10 @@
     <h1>Custom polygon shapes</h1>
     <p>Every shape below is a normal element with a CSS <code>clip-path</code>, passed to the
     field as <code>clipTo</code> so the canvas clips to the same shape. The simulation still
-    runs in the bounding box (sim-aware clipping is the v0.2 feature) — what you are testing
-    here is that the <em>visual</em> clip is exact, corners and concave edges included, and
-    that the pointer reaction works inside the visible shape.</p>
+    runs in the bounding box. Confining the simulation itself needs the shape-aware
+    <code>clipTo: { path }</code> form on test 8. Test here that the <em>visual</em> clip is
+    exact, corners and concave edges included, and that the pointer reaction works inside the
+    visible shape.</p>
 
     <h2>Geometric</h2>
     <div class="row" id="geometric"></div>
@@ -42,6 +52,7 @@
   </main>
 
   <script src="../../packages/core/dist/index.global.js"></script>
+  <script src="outline.js"></script>
   <script>
     const shapes = [
       // [label, width, height, clip-path, colour]
@@ -70,18 +81,26 @@
     const mount = (rowId, defs) => {
       const row = document.getElementById(rowId);
       for (const [label, w, h, clip, color] of defs) {
+        // Caption below rather than inside: an L- or T-shape has no material at its centre,
+        // so a centred label gets sliced in half by the clip.
+        const fig = document.createElement('figure');
+        fig.className = 'shape-fig';
         const el = document.createElement('div');
         el.className = 'shape';
         el.style.width = w + 'px';
         el.style.height = h + 'px';
         if (clip) el.style.clipPath = clip;
         else el.style.borderRadius = '8px';
-        el.innerHTML = `<span>${label}</span>`;
-        row.appendChild(el);
+        const caption = document.createElement('figcaption');
+        caption.textContent = label;
+        fig.append(el, caption);
+        row.appendChild(fig);
         plexure.createPlexure(el, {
           star: { color }, link: { color, opacity: 0.5 }, cursor: { color },
           density: 4500, clipTo: clip || null,
         });
+        // Outline the clip boundary so it is visible against the field.
+        if (clip) outlineShape(el, clip);
       }
     };
     mount('geometric', shapes);
@@ -90,11 +109,15 @@
 
     const sizesRow = document.getElementById('sizes');
     for (const s of [200, 160, 120, 90, 60, 40, 24]) {
+      const fig = document.createElement('figure');
+      fig.className = 'shape-fig';
       const el = document.createElement('div');
       el.className = 'sq';
       el.style.width = el.style.height = s + 'px';
-      el.innerHTML = `<span>${s}px</span>`;
-      sizesRow.appendChild(el);
+      const caption = document.createElement('figcaption');
+      caption.textContent = s + 'px';
+      fig.append(el, caption);
+      sizesRow.appendChild(fig);
       plexure.createPlexure(el, {
         star: { color: '#ebe9e4' }, link: { color: '#ebe9e4', opacity: 0.45 },
         cursor: { color: '#7fd4c1' },

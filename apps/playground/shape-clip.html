@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>8 · Sim-aware shape clipping — plexure harness</title>
+  <link rel="stylesheet" href="harness.css" />
+  <style>
+    .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+    .panel { background: var(--card); border-radius: 8px; overflow: hidden; }
+    .panel h3 { margin: 0; padding: 0.6rem 0.8rem 0; font-size: 0.8rem; font-weight: 700; color: #fff; }
+    .panel p { margin: 0.25rem 0.8rem 0.6rem; font-size: 0.7rem; opacity: 0.7; }
+    /* Inset from the card edge: a `contain` fit touches its container exactly, so without
+       this the shape and its outline sit flush against the panel border. */
+    .stage { height: 280px; position: relative; margin: 0 0.85rem 0.85rem; }
+    .stage.wide { height: 220px; }
+    .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .swatch { background: var(--card); border-radius: 8px; overflow: hidden; }
+    .swatch .stage { height: 200px; margin: 0 0.7rem 0.7rem; }
+    .swatch h4 { margin: 0; padding: 0.5rem 0.7rem 0; font-size: 0.75rem; font-weight: 700; color: #fff; }
+    .swatch code { font-size: 0.65rem; opacity: 0.7; padding: 0 0.7rem 0.5rem; display: block; }
+    .controls { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0 0; }
+    .controls button { font: inherit; font-size: 0.72rem; padding: 0.3rem 0.6rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="crumb"><a href="index.html">← harness</a> · test 8: sim-aware shape clipping</p>
+    <h1>Sim-aware shape clipping</h1>
+    <p>A <code>clipTo</code> string or bare <code>Path2D</code> masks the <em>render</em>
+    alone. The simulation keeps running in the full bounding box, so particles drift behind
+    the mask and vanish. Pass a <code>{ path }</code> object instead and the
+    <em>simulation</em> itself is confined: the engine seeds particles inside the shape and
+    re-places them inside when they leave.</p>
+
+    <h2>The distinction, side by side</h2>
+    <p class="note">Same shape, same seed, same count. Watch the edges. On the left, particles
+    stream out of the shape and disappear at the mask boundary, and the interior thins and
+    refills unevenly. On the right, every particle lives inside the shape for good.</p>
+    <div class="pair">
+      <div class="panel">
+        <h3>Mask only <code>clipTo: Path2D</code></h3>
+        <p>Weaker: the simulation still fills the bounding box.</p>
+        <div class="stage" id="visual"></div>
+      </div>
+      <div class="panel">
+        <h3>Sim-aware <code>clipTo: { path }</code></h3>
+        <p>Stronger: the field lives in the shape.</p>
+        <div class="stage" id="aware"></div>
+      </div>
+    </div>
+
+    <h2>fit</h2>
+    <p class="note">Maps the shape's own coordinate space into the container. All three use
+    the same 100×100 star path in a wide box. <code>contain</code> fits it whole,
+    <code>cover</code> fills the box and overflows, <code>none</code> uses raw coordinates.</p>
+    <div class="grid3" id="fits"></div>
+
+    <h2>Shapes worth stressing</h2>
+    <p class="note">Concave, hollow, and thin. The ring must keep its hole empty. The sliver
+    covers about 5% of its container, which is the case that makes naive rejection sampling
+    fall over.</p>
+    <div class="grid3" id="shapes"></div>
+
+    <h2>edgeBehaviour inside a shape</h2>
+    <p class="note">An arbitrary shape has no opposite edge to cross to, so
+    <code>wrap</code> and <code>respawn</code> both re-place particles inside.
+    <code>fade</code> ramps a particle out as it nears the boundary. That one costs two to
+    three extra containment tests per particle per frame.</p>
+    <div class="grid3" id="edges"></div>
+
+    <h2>Cursor stress</h2>
+    <p class="note"><strong>Judgement call needed.</strong> Drag hard and fast across the
+    shape. The cursor pull can shove many particles out at once, and the engine re-places
+    each one somewhere else, which may read as popping. If it looks bad, clamping particles
+    at the boundary instead costs a small change. Use the buttons to compare a gentle pull
+    against an aggressive one.</p>
+    <div class="panel">
+      <div class="stage" id="stress"></div>
+    </div>
+    <div class="controls">
+      <button type="button" data-strength="0.41">default pull (0.41)</button>
+      <button type="button" data-strength="1.5">strong pull (1.5)</button>
+      <button type="button" data-strength="4">absurd pull (4)</button>
+      <button type="button" data-count="60">60 particles</button>
+      <button type="button" data-count="160">160 particles</button>
+    </div>
+  </main>
+
+  <script src="../../packages/core/dist/index.global.js"></script>
+  <script src="outline.js"></script>
+  <script>
+    const { createPlexure } = plexure;
+    const fields = [];
+    window.fields = fields;
+
+    const STAR =
+      'M 50 3 L 61 38 L 98 38 L 68 60 L 79 95 L 50 73 L 21 95 L 32 60 L 2 38 L 39 38 Z';
+    const RING =
+      'M 50 2 A 48 48 0 1 0 50 98 A 48 48 0 1 0 50 2 Z M 50 26 A 24 24 0 1 1 50 74 A 24 24 0 1 1 50 26 Z';
+    const NOTCH = 'M 2 2 H 98 V 98 H 60 V 45 H 40 V 98 H 2 Z';
+    const SLIVER = 'M 0 46 H 100 V 54 H 0 Z';
+
+    // No explicit count, and the same density test 4 uses, so these panels are directly
+    // comparable with the polygon shapes there.
+    const base = { seed: 7, density: 4500, star: { color: '#EBE9E4' } };
+
+    function mount(el, options) {
+      const field = createPlexure(el, { ...base, ...options });
+      fields.push(field);
+      // Outline the shape, so you can see exactly where the boundary is.
+      const clip = options && options.clipTo;
+      if (clip && clip.path && typeof clip.path === 'string') {
+        outlineShape(el, { d: clip.path, fit: clip.fit || 'contain' });
+      }
+      return field;
+    }
+
+    function panel(parent, title, code, options) {
+      const wrap = document.createElement('div');
+      wrap.className = 'swatch';
+      wrap.innerHTML =
+        '<h4>' + title + '</h4><code>' + code + '</code><div class="stage"></div>';
+      parent.appendChild(wrap);
+      mount(wrap.querySelector('.stage'), options);
+    }
+
+    // --- the distinction -----------------------------------------------------
+    // Same geometry both sides: one as a bare Path2D (visual only), one as an object.
+    const visualHost = document.getElementById('visual');
+    // Hand-fit the bare Path2D with exactly the matrix the library's fit:'contain' uses, so
+    // the only difference between the two panels is sim-awareness, not size or position.
+    const scaled = new Path2D();
+    scaled.addPath(
+      new Path2D(STAR),
+      fitMatrix(STAR, visualHost.clientWidth, visualHost.clientHeight, 'contain'),
+    );
+    mount(visualHost, { clipTo: scaled });
+    outlineShape(visualHost, { d: STAR, fit: 'contain' });
+    mount(document.getElementById('aware'), { clipTo: { path: STAR, fit: 'contain' } });
+
+    // --- fit -----------------------------------------------------------------
+    const fits = document.getElementById('fits');
+    for (const fit of ['contain', 'cover', 'none']) {
+      // 'none' leaves the star at its raw 100x100 coordinates, so the same count and link
+      // distance that read well at full size collapse into a solid blob. Scale both down
+      // to keep the panel legible — the point being demonstrated is the placement.
+      const raw = fit === 'none';
+      panel(fits, fit, "clipTo: { path: STAR, fit: '" + fit + "' }", {
+        link: raw ? { distance: 26 } : undefined,
+        star: raw ? { size: [0.6, 1.2] } : undefined,
+        clipTo: { path: STAR, fit },
+      });
+    }
+
+    // --- shapes --------------------------------------------------------------
+    const shapes = document.getElementById('shapes');
+    panel(shapes, 'Ring (hollow)', 'hole must stay empty', {
+      clipTo: { path: RING, fit: 'contain' },
+    });
+    panel(shapes, 'Concave notch', 'inverted corners', {
+      clipTo: { path: NOTCH, fit: 'contain' },
+    });
+    panel(shapes, 'Sliver (~5% of box)', 'worst case for sampling', {
+      clipTo: { path: SLIVER, fit: 'contain' },
+    });
+
+    // --- edge behaviour ------------------------------------------------------
+    const edges = document.getElementById('edges');
+    for (const edgeBehaviour of ['wrap', 'respawn', 'fade']) {
+      panel(edges, edgeBehaviour, "edgeBehaviour: '" + edgeBehaviour + "'", {
+        edgeBehaviour,
+        drift: [1.2, 2.4],
+        clipTo: { path: STAR, fit: 'contain' },
+      });
+    }
+
+    // --- cursor stress -------------------------------------------------------
+    const stress = mount(document.getElementById('stress'), {
+      clipTo: { path: STAR, fit: 'contain' },
+    });
+    for (const button of document.querySelectorAll('.controls button')) {
+      button.addEventListener('click', () => {
+        const { strength, count } = button.dataset;
+        if (strength) stress.setOptions({ cursor: { strength: Number(strength) } });
+        if (count) stress.setOptions({ count: Number(count) });
+      });
+    }
+  </script>
+</body>
+</html>

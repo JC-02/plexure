@@ -32,6 +32,14 @@
       padding: 1.25rem;
     }
     .group .window > * { position: relative; z-index: 1; }
+    /* These labels sit on top of a moving field: bold, pure white, dark halo. */
+    .group .window strong, .group .window .caption {
+      color: #fff;
+      font-weight: 700;
+      opacity: 1;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.8);
+    }
+    .group .window .caption { font-weight: 600; }
   </style>
 </head>
 <body>
@@ -81,6 +89,7 @@
   </main>
 
   <script src="../../packages/core/dist/index.global.js"></script>
+  <script src="outline.js"></script>
   <script>
     const mk = (id, color, opts) => plexure.createPlexure(document.getElementById(id), {
       star: { color }, link: { color, opacity: 0.45 }, cursor: { color }, density: 5000, ...opts,
@@ -109,7 +118,12 @@
       return `path('${parts.join(' ')}')`;
     };
     fields.windowed = mk('windowed', '#7fd4c1', { density: 9000, clipTo: windowsClip() });
-    addEventListener('resize', () => fields.windowed.setOptions({ clipTo: windowsClip() }), { passive: true });
+    outlineShape(windowed, windowsClip());
+    addEventListener('resize', () => {
+      const clip = windowsClip();
+      fields.windowed.setOptions({ clipTo: clip });
+      outlineShape(windowed, clip);
+    }, { passive: true });
   </script>
 </body>
 </html>
