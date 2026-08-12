@@ -2,6 +2,7 @@ import { type ParsedColor, parseColor } from './color';
 import { defaults, mergeOptions, resolveDistance } from './options';
 import { claimPointer, pointerOwner, releasePointer } from './pointer';
 import { createRng } from './rng';
+import { resolveShape } from './shape';
 import { startTick, stopTick } from './ticker';
 import type { PlexureInput, PlexureInstance, PlexureTarget } from './types';
 
@@ -87,6 +88,21 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
   let cols = 0;
   let rows = 0;
   let buckets: number[][] = [];
+
+  /** Path used for the in-canvas render clip, whether or not the sim is shape-aware. */
+  let clipPath: Path2D | null = null;
+  /** Same path, set only when the simulation itself is confined to it. */
+  let simShape: Path2D | null = null;
+  let shapeBox: [number, number, number, number] | null = null;
+  /** Sampled area of the shape, so `density` counts the shape's surface, not the box's. */
+  let shapeArea = 0;
+  /**
+   * Points already proven to be inside the shape. A shape that is hard to hit by random
+   * sampling falls back to these instead of retrying forever.
+   */
+  const anchors: [number, number][] = [];
+  /** Device-pixel scale currently applied to the context. */
+  let dpr = 1;
 
   let destroyed = false;
   let userPaused = false;
@@ -189,17 +205,114 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
   function dprFor(): number {
     // Cap so width/height in device px stay under the safe canvas dimension limit
     // (Chrome caps at 65,535, Safari lower) — matters for tall 'page' fields.
-    let dpr = Math.min(window.devicePixelRatio || 1, o.maxDpr);
+    let scale = Math.min(window.devicePixelRatio || 1, o.maxDpr);
     const maxDim = Math.max(width, height);
-    if (maxDim * dpr > 32000) dpr = 32000 / maxDim;
-    return dpr;
+    if (maxDim * scale > 32000) scale = 32000 / maxDim;
+    return scale;
   }
 
   function applyDpr(): void {
-    const dpr = dprFor();
+    dpr = dprFor();
     canvas.width = Math.max(1, Math.round(width * dpr));
     canvas.height = Math.max(1, Math.round(height * dpr));
     ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  /**
+   * `isPointInPath` reads its point in canvas device pixels while applying the current
+   * transform to the path, so container coordinates have to be scaled up to meet it.
+   * Getting this wrong looks perfect at dpr 1 and inverts on a retina display.
+   */
+  function inShape(shape: Path2D, x: number, y: number): boolean {
+    return !!ctx && ctx.isPointInPath(shape, x * dpr, y * dpr);
+  }
+
+  /**
+   * Inside the shape *and* inside the container. `fit: 'cover'` puts those in conflict on
+   * purpose — it overflows the box — and a particle in the overflow is inside the shape
+   * yet outside anything that can be seen. The cheap bounds test also short-circuits the
+   * path test for particles that have already left the box.
+   */
+  function contained(shape: Path2D, x: number, y: number): boolean {
+    return x >= 0 && x <= width && y >= 0 && y <= height && inShape(shape, x, y);
+  }
+
+  /**
+   * The region worth sampling: the shape's own box rather than the container's, since a
+   * shape covering a small slice of its container would otherwise reject almost every
+   * candidate. Clamped back to the container because `fit: 'cover'` deliberately overflows
+   * it, and a point in the overflow is inside the shape but outside anything visible.
+   */
+  function sampleBox(): [number, number, number, number] | null {
+    const [bx, by, bw, bh] = shapeBox ?? [0, 0, width, height];
+    const x0 = Math.max(0, bx);
+    const y0 = Math.max(0, by);
+    const sw = Math.min(width, bx + bw) - x0;
+    const sh = Math.min(height, by + bh) - y0;
+    return sw > 0 && sh > 0 ? [x0, y0, sw, sh] : null;
+  }
+
+  /** A point inside the shape, or anywhere in the box when the field is not shape-aware. */
+  function pick(): [number, number] | null {
+    if (!simShape) return [rand() * width, rand() * height];
+    const box = sampleBox();
+    if (!box) return null;
+    const [x0, y0, sw, sh] = box;
+    for (let i = 0; i < 24; i++) {
+      const x = x0 + rand() * sw;
+      const y = y0 + rand() * sh;
+      if (inShape(simShape, x, y)) {
+        if (anchors.length < 8) anchors.push([x, y]);
+        return [x, y];
+      }
+    }
+    return anchors.length ? anchors[(rand() * anchors.length) | 0] : null;
+  }
+
+  /**
+   * Estimate the shape's area on a fixed grid, so `density` — square pixels of surface per
+   * particle — means the same thing inside a shape as it does in a plain box. Measured
+   * against the container instead, a star covering 40% of its box would render about two
+   * and a half times denser than an unclipped field with identical settings.
+   *
+   * Deliberately a grid rather than random samples: it consumes no RNG, so a seeded field
+   * stays reproducible across resizes.
+   */
+  function estimateShapeArea(): number {
+    const shape = simShape;
+    const box = shape && sampleBox();
+    if (!shape || !box) return width * height;
+    const [x0, y0, sw, sh] = box;
+    let inside = 0;
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        if (inShape(shape, x0 + ((i + 0.5) / 8) * sw, y0 + ((j + 0.5) / 8) * sh)) inside++;
+      }
+    }
+    return (inside / 64) * sw * sh;
+  }
+
+  /**
+   * Resolve `clipTo` against the current box. A shape that cannot be sampled at all is
+   * kept as a render clip but dropped from the simulation, so a degenerate path degrades
+   * to masking alone rather than producing an empty field.
+   */
+  function resolveClip(): void {
+    anchors.length = 0;
+    const clip = o.clipTo;
+    if (clip instanceof Path2D) {
+      clipPath = clip;
+      simShape = null;
+      shapeBox = null;
+      shapeArea = 0;
+      return;
+    }
+    const resolved = resolveShape(clip, width, height);
+    clipPath = resolved && resolved.path;
+    simShape = clipPath;
+    shapeBox = resolved && resolved.box;
+    if (simShape && !pick()) simShape = null;
+    shapeArea = simShape ? estimateShapeArea() : 0;
   }
 
   function measure(): { prevW: number; prevH: number } {
@@ -227,6 +340,8 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     cs.width = `${width}px`;
     cs.height = `${height}px`;
     resolveDistances();
+    // Re-fitted here rather than once at construction, so 'contain'/'cover' track resizes.
+    resolveClip();
     return { prevW, prevH };
   }
 
@@ -246,7 +361,9 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     if (!width || !height) return 0;
     const { count, minCount, maxCount, density } = o;
     if (count !== undefined) return count;
-    return Math.max(minCount, Math.min(maxCount, Math.round((width * height) / density)));
+    // Inside a sim-aware shape, density is measured against the shape's own surface.
+    const area = simShape ? shapeArea : width * height;
+    return Math.max(minCount, Math.min(maxCount, Math.round(area / density)));
   }
 
   function spawn(x: number, y: number): Particle {
@@ -263,7 +380,8 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     particles.length = 0;
     const n = targetCount();
     for (let i = 0; i < n; i++) {
-      particles.push(spawn(rand() * width, rand() * height));
+      const at = pick();
+      if (at) particles.push(spawn(at[0], at[1]));
     }
   }
 
@@ -283,7 +401,15 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     const want = targetCount();
     while (particles.length > want) particles.pop();
     while (particles.length < want) {
-      particles.push(spawn(rand() * width, rand() * height));
+      const at = pick();
+      if (!at) break;
+      particles.push(spawn(at[0], at[1]));
+    }
+    // A new shape, or a resize that moved the old one, can leave particles stranded
+    // outside it. Correct here rather than waiting for a frame, so a paused field is right
+    // immediately.
+    if (simShape) {
+      for (const p of particles) if (!contained(simShape, p.x, p.y)) respawn(p);
     }
   }
 
@@ -291,13 +417,19 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
 
   function pointerActive(): boolean {
     if (!pointer.entered || overIgnored || !o.cursor.enabled) return false;
+    // A shape-aware field reacts only where it actually is. The host stays a rectangle, so
+    // without this the corners outside the shape still pull — dragging particles toward a
+    // point they can never reach, which reads as the field twitching at nothing.
+    if (simShape && !inShape(simShape, pointer.x, pointer.y)) return false;
     // Element fields react only while they own the pointer; viewport and page fields go
     // inert whenever any element field holds it.
     return mode === 'element' ? pointerOwner() === token : pointerOwner() === null;
   }
 
   function respawn(p: Particle): void {
-    const fresh = spawn(rand() * width, rand() * height);
+    const at = pick();
+    if (!at) return;
+    const fresh = spawn(at[0], at[1]);
     p.x = fresh.x;
     p.y = fresh.y;
     p.vx = fresh.vx;
@@ -306,8 +438,26 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     p.by = fresh.by;
   }
 
+  /**
+   * Approximate how close a particle is to leaving the shape, by probing ahead along its
+   * direction of travel. An exact distance to an arbitrary path is not available, and this
+   * is what 'fade' actually needs: a ramp that reaches zero as the boundary arrives.
+   */
+  function shapeEdgeAlpha(p: Particle, shape: Path2D): number {
+    const speed = Math.hypot(p.vx, p.vy);
+    if (!speed) return 1;
+    const ux = p.vx / speed;
+    const uy = p.vy / speed;
+    for (let k = 3; k >= 1; k--) {
+      const d = (edgeDist * k) / 3;
+      if (inShape(shape, p.x + ux * d, p.y + uy * d)) return k / 3;
+    }
+    return 0;
+  }
+
   function step(dt: number): void {
     const { friction, edgeBehaviour, cursor } = o;
+    const shape = simShape;
     const active = pointerActive();
     const px = pointer.x;
     const py = pointer.y;
@@ -335,7 +485,16 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
-      if (edgeBehaviour === 'wrap') {
+      if (shape) {
+        // Inside an arbitrary shape there is no opposite edge to wrap to, so 'wrap' and
+        // 'respawn' both re-place the particle inside — which preserves what wrapping was
+        // for, an evenly populated field rather than one bunching toward the centre.
+        const inside = contained(shape, p.x, p.y);
+        if (!inside) respawn(p);
+        if (edgeBehaviour === 'fade') {
+          p.a = inside ? shapeEdgeAlpha(p, shape) : 0;
+        }
+      } else if (edgeBehaviour === 'wrap') {
         // Wrap rather than respawn, so the field stays evenly populated instead of
         // bunching toward the centre.
         if (p.x < -margin) p.x = w + margin;
@@ -389,7 +548,7 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     const fading = o.edgeBehaviour === 'fade';
 
     ctx.clearRect(0, 0, width, height);
-    const pathClip = o.clipTo instanceof Path2D ? o.clipTo : null;
+    const pathClip = clipPath;
     if (pathClip) {
       ctx.save();
       ctx.clip(pathClip);
@@ -664,6 +823,8 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
       resolveDistances();
       ensureIntersectionObserver();
       if (o.maxDpr !== prevDpr) applyDpr();
+      // After applyDpr, because containment tests are scaled by the current dpr.
+      resolveClip();
       reflow(width, height);
       updateRunning();
       if (!ticking) renderStatic();

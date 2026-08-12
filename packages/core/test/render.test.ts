@@ -57,7 +57,7 @@ describe('determinism', () => {
 
   // Documented behaviour, not an accident: changing the seed swaps the generator for
   // future spawns and leaves particles that already exist where they are. Reseeding the
-  // whole field would read as a jump. (Open v0.2 question — see roadmap item 6.)
+  // whole field would read as a jump.
   it('leaves existing particles in place when the seed changes', () => {
     const a = mountHost(400, 300);
     const field = still(a, { count: 60, seed: 7, ...DOTS_ONLY });
@@ -226,9 +226,9 @@ describe('spatial hash', () => {
       points.push([x, y]);
       return origArc.call(this, x, y, ...(rest as [number, number, number, boolean?]));
     };
-    proto.stroke = function (this: CanvasRenderingContext2D, ...args: []) {
+    proto.stroke = function (this: CanvasRenderingContext2D, ...args: [] | [Path2D]) {
       strokes++;
-      return origStroke.apply(this, args);
+      return (origStroke as (...a: [] | [Path2D]) => void).apply(this, args);
     };
     try {
       field.refresh();
@@ -309,10 +309,11 @@ describe('spatial hash', () => {
   });
 });
 
-describe('Path2D clipping', () => {
-  // Today clipTo only clips the *render*; the simulation still runs in the full bounding
-  // box. Making the sim itself shape-aware is the v0.2 headline feature, and these bounds
-  // assertions are what will confirm it once it lands.
+describe('Path2D clipping — mask only', () => {
+  // A bare Path2D clips the *render* alone: the simulation keeps running in the full
+  // bounding box, so particles drift out of the shape and disappear at its edge. The
+  // shape-aware form (`clipTo: { path }`) is covered in shape.test.ts; these assertions
+  // pin the mask-only behaviour so the two cannot quietly converge.
   it('confines painting to the path', () => {
     const host = mountHost(400, 300);
     const path = new Path2D();

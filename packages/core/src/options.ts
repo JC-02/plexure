@@ -43,7 +43,7 @@ export const defaults: PlexureOptions = {
 /**
  * Spread-with-undefined would clobber base values, so patch keys are copied only when set.
  * Prototype-shaped keys are skipped so merging attacker-influenced JSON can never become a
- * pollution vector, today or after a future refactor.
+ * pollution vector, including after a future refactor.
  */
 function assign<T extends object>(base: T, patch: Partial<T> | undefined): T {
   const out = { ...base };

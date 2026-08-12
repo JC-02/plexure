@@ -3,6 +3,7 @@ import type { PlexureInput, PlexureInstance, PlexureTarget } from './types';
 
 export { defaults } from './options';
 export type {
+  ClipFit,
   CursorOptions,
   Distance,
   EdgeBehaviour,
@@ -11,6 +12,7 @@ export type {
   PlexureInstance,
   PlexureOptions,
   PlexureTarget,
+  ShapeClip,
   StarOptions,
 } from './types';
 
