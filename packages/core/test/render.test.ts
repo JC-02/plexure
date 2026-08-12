@@ -293,6 +293,33 @@ describe('spatial hash', () => {
     expect(strokes).toBe((points.length * (points.length - 1)) / 2);
   });
 
+  /**
+   * The grid cell is capped, so a very small link distance is served by a cell much larger
+   * than the distance. That is only safe if a larger cell never changes the answer: it
+   * widens the candidate set, and the distance check rejects the extras. Brute force is the
+   * arbiter.
+   */
+  it('agrees with brute force when the cell is capped well above the link distance', () => {
+    const host = mountHost(400, 300);
+    const field = track(
+      createPlexure(host, {
+        count: 140,
+        seed: 21,
+        maxDpr: 1,
+        clampDistances: false,
+        cursor: { enabled: false },
+        // Far below the capped cell size for this box, so the grid is coarser than the range.
+        link: { distance: 9 },
+      }),
+    );
+
+    const { points, strokes } = readFrame(field);
+    expect(points).toHaveLength(140);
+    const expected = bruteForcePairs(points, 9);
+    expect(expected).toBeGreaterThan(0);
+    expect(strokes).toBe(expected);
+  });
+
   it('draws no links at all when the range is tiny', () => {
     const host = mountHost(400, 300);
     const field = track(

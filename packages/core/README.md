@@ -66,6 +66,27 @@ documents every option and its default. Colours accept any CSS colour, including
 `var(--custom-properties)`. Distances accept px numbers, or `'35%'`-style fractions of the
 smaller container edge.
 
+## Guarantees
+
+A field is decoration. It must never be the reason a page breaks.
+
+- **It cannot take clicks, selection or focus.** The canvas is `pointer-events: none`,
+  `aria-hidden`, unfocusable, and `contain: strict`.
+- **It never blocks scrolling.** Listeners are passive and none of them call
+  `preventDefault`.
+- **It stops rather than spams.** A frame that throws is caught. Three failures in a row
+  and the field pauses itself and warns once, instead of throwing into your console every
+  frame for as long as the tab is open. `resume()` brings it back.
+- **It reaches nothing.** No network request, no storage, no cookies, and no `eval` or
+  `new Function`, so it runs under a strict Content-Security-Policy.
+- **It imports safely on a server**, and hands back an inert handle anywhere it cannot
+  paint, jsdom included. Component tests do not need to mock it.
+- **`destroy()` is complete and idempotent.** Every listener and observer goes back.
+- **Bad options degrade instead of throwing.** An unreadable colour falls back to white, a
+  zero-size container does nothing, and absurd counts and distances are clamped.
+
+Each of those is a test rather than a promise.
+
 React bindings: [`@plexure/react`](../react).
 
 ## License

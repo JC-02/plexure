@@ -20,6 +20,20 @@ interface Particle {
 }
 
 const RESIZE_DEBOUNCE_MS = 150;
+/**
+ * Consecutive frame errors tolerated before a field gives up. A field is decoration: if it
+ * cannot draw, it stops and says so once, rather than throwing every frame into the host
+ * page's console for as long as the tab is open.
+ */
+const MAX_FRAME_ERRORS = 3;
+/**
+ * Ceiling on spatial-hash cells. The grid cell is normally the link distance, but a very
+ * small link distance would explode it: a 1 px cell over a full-page field is millions of
+ * buckets rebuilt every frame, which freezes the tab. Growing the cell to fit this budget
+ * is always safe, because a larger cell only widens the candidate set the distance check
+ * then rejects.
+ */
+const MAX_GRID_CELLS = 4096;
 // Historical 0.04/frame, compounded by the 2.73× the original 165 Hz hardware applied.
 const INTENSITY_EASE = 0.1;
 
@@ -108,6 +122,9 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
 
   let destroyed = false;
   let userPaused = false;
+  /** Set after MAX_FRAME_ERRORS consecutive failures; cleared by resume(). */
+  let halted = false;
+  let frameErrors = 0;
   let offscreen = false;
   let ticking = false;
   let resizeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -400,10 +417,15 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
   function targetCount(): number {
     if (!width || !height) return 0;
     const { count, minCount, maxCount, density } = o;
-    if (count !== undefined) return count;
     // Inside a sim-aware shape, density is measured against the shape's own surface.
     const area = simShape ? shapeArea : width * height;
-    return Math.max(minCount, Math.min(maxCount, Math.round(area / density)));
+    const wanted =
+      count !== undefined
+        ? count
+        : Math.max(minCount, Math.min(maxCount, Math.round(area / density)));
+    // Never negative, never fractional, never NaN. reflow() pops until the array is short
+    // enough, and a negative or NaN target would pop an empty array forever.
+    return wanted > 0 ? Math.floor(wanted) : 0;
   }
 
   function spawn(x: number, y: number): Particle {
@@ -560,7 +582,9 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
   // Rebuilt each frame. Bucketing n particles is O(n); replaces three stacked O(n²)
   // passes that ran ~43k distance checks per frame at n=170.
   function rebuildGrid(): void {
-    const cell = linkDist;
+    // A non-finite distance (an unparseable '%' string, say) must not reach the maths.
+    const wanted = linkDist > 0 ? linkDist : 1;
+    const cell = Math.max(wanted, Math.sqrt((width * height) / MAX_GRID_CELLS));
     cols = Math.max(1, Math.ceil(width / cell));
     rows = Math.max(1, Math.ceil(height / cell));
     const total = cols * rows;
@@ -710,9 +734,22 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
 
   /* ---------------------------------------------------------------------- loop */
 
+  /**
+   * A thrown frame must never take the host page with it. Transient failures (a lost
+   * context mid-resize, say) are swallowed and retried; a field that fails
+   * MAX_FRAME_ERRORS frames in a row stops for good and warns exactly once.
+   */
   const tick = (dt: number): void => {
-    step(dt);
-    draw(dt);
+    try {
+      step(dt);
+      draw(dt);
+      frameErrors = 0;
+    } catch (error) {
+      if (++frameErrors < MAX_FRAME_ERRORS) return;
+      halted = true;
+      updateRunning();
+      console.warn('plexure: stopped after repeated render errors', error);
+    }
   };
 
   function reducedNow(): boolean {
@@ -728,13 +765,20 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     }
     const eased = shownIntensity;
     shownIntensity = o.intensity;
-    draw(1);
+    // Guarded like tick: a still frame is drawn from pause(), resize and setOptions, all of
+    // which are called straight from host code that must not receive our exceptions.
+    try {
+      draw(1);
+    } catch {
+      halted = true;
+    }
     shownIntensity = reducedNow() ? o.intensity : eased;
   }
 
   function updateRunning(): void {
     const shouldRun =
       !destroyed &&
+      !halted &&
       !userPaused &&
       width > 0 &&
       height > 0 &&
@@ -875,6 +919,10 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     },
     resume(): void {
       userPaused = false;
+      // Also the way back from a halt, so a caller who fixed the cause can restart the
+      // field without rebuilding it.
+      halted = false;
+      frameErrors = 0;
       updateRunning();
     },
     refresh(): void {

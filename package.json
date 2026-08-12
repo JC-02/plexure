@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
+    "@types/node": "^26.2.0",
     "@vitest/browser-playwright": "^4.1.10",
     "jsdom": "^30.0.1",
     "tsup": "^8.5.0",
