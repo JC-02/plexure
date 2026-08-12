@@ -65,6 +65,27 @@ export interface ShapeClip {
   viewBox?: [number, number, number, number];
 }
 
+/**
+ * Show one continuous field through several apertures. The field spans the whole host and
+ * is masked to the union of the window elements, so a particle drifting out of one window
+ * reappears in the next.
+ *
+ * This masks the render only, unlike {@link ShapeClip}. The simulation stays continuous
+ * across the gaps, which is the effect: several containers sharing one field rather than
+ * one field per container. Corner radii are read from each window's computed style, so the
+ * mask follows the CSS instead of a hand-copied constant.
+ */
+export interface WindowClip {
+  /**
+   * Elements to show the field through, or a selector queried inside the host.
+   *
+   * Each window is watched with a `ResizeObserver`, so the mask follows them as they
+   * resize. A window that *moves* without changing size, a repositioned absolute element
+   * for instance, cannot be observed that way: call `refresh()` after such a change.
+   */
+  windows: Element[] | string;
+}
+
 export interface PlexureOptions {
   /** Square pixels of surface per particle. Lower is denser. */
   density: number;
@@ -91,9 +112,12 @@ export interface PlexureOptions {
    *
    * A {@link ShapeClip} object clips the *simulation* too: particles are seeded inside the
    * shape and re-placed inside when they leave, so the field genuinely lives in the shape
-   * rather than being masked by it. `null` clears a previous clip.
+   * rather than being masked by it.
+   *
+   * A {@link WindowClip} object masks one continuous field to the union of several child
+   * elements, so it shows through them like apertures. `null` clears a previous clip.
    */
-  clipTo: string | Path2D | ShapeClip | null;
+  clipTo: string | Path2D | ShapeClip | WindowClip | null;
   /** Master presence multiplier, 0–1. Changes are eased, so it can be driven from scroll. */
   intensity: number;
   /**

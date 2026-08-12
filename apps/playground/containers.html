@@ -76,11 +76,12 @@
     </div>
 
     <h2>Windowed group — one unified field showing through separate containers</h2>
-    <p class="note">The inverse of the joined group: one field spans the whole wrapper, but a
-    multi-subpath <code>path()</code> clip makes it visible only <em>inside</em> the three
-    windows — the gaps show nothing. Watch a particle drift out of one window and re-appear
-    in the next: it is the same continuous field passing behind the mask. The clip is
-    rebuilt live on resize via setOptions.</p>
+    <p class="note">The inverse of the joined group: one field spans the whole wrapper, and
+    <code>clipTo: { windows: '.window' }</code> shows it only <em>inside</em> the three
+    windows. The gaps show nothing. Watch a particle drift out of one window and re-appear in
+    the next: it is the same continuous field passing behind the mask, which is why windows
+    mask rather than confine. The library builds the union clip, reads each window's
+    border-radius, and rebuilds the mask when a window resizes.</p>
     <div class="group" id="windowed">
       <div class="window"><strong>Window one</strong><p class="caption">Field visible only in here…</p></div>
       <div class="window"><strong>Window two</strong><p class="caption">…and here…</p></div>
@@ -102,28 +103,31 @@
       group: mk('group', '#ebe9e4', { density: 9000 }),
     };
 
-    // Windowed group: one field on the wrapper, clipped to the union of the child
-    // window rects via a multi-subpath path(). Rebuilt on resize through setOptions.
+    // Windowed group: one field on the wrapper, shown through the child windows. The
+    // library builds the union clip, reads each window's border-radius, and keeps the mask
+    // fresh through its own ResizeObserver.
     const windowed = document.getElementById('windowed');
-    const roundedRect = (x, y, w, h, r) =>
-      `M${x + r} ${y} h${w - 2 * r} a${r} ${r} 0 0 1 ${r} ${r} v${h - 2 * r} ` +
-      `a${r} ${r} 0 0 1 ${-r} ${r} h${2 * r - w} a${r} ${r} 0 0 1 ${-r} ${-r} ` +
-      `v${2 * r - h} a${r} ${r} 0 0 1 ${r} ${-r} Z`;
-    const windowsClip = () => {
+    fields.windowed = mk('windowed', '#7fd4c1', {
+      density: 9000,
+      clipTo: { windows: '.window' },
+    });
+
+    // Harness-only: trace the same rects so the boundary is visible.
+    const outlineWindows = () => {
       const base = windowed.getBoundingClientRect();
       const parts = [...windowed.querySelectorAll('.window')].map((el) => {
         const r = el.getBoundingClientRect();
-        return roundedRect(r.left - base.left, r.top - base.top, r.width, r.height, 12);
+        const radius = Number.parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
+        return roundedRectPath(r.left - base.left, r.top - base.top, r.width, r.height, radius);
       });
-      return `path('${parts.join(' ')}')`;
+      outlineShape(windowed, `path('${parts.join(' ')}')`);
     };
-    fields.windowed = mk('windowed', '#7fd4c1', { density: 9000, clipTo: windowsClip() });
-    outlineShape(windowed, windowsClip());
-    addEventListener('resize', () => {
-      const clip = windowsClip();
-      fields.windowed.setOptions({ clipTo: clip });
-      outlineShape(windowed, clip);
-    }, { passive: true });
+    const roundedRectPath = (x, y, w, h, r) =>
+      `M${x + r} ${y} h${w - 2 * r} a${r} ${r} 0 0 1 ${r} ${r} v${h - 2 * r} ` +
+      `a${r} ${r} 0 0 1 ${-r} ${r} h${2 * r - w} a${r} ${r} 0 0 1 ${-r} ${-r} ` +
+      `v${2 * r - h} a${r} ${r} 0 0 1 ${r} ${-r} Z`;
+    outlineWindows();
+    addEventListener('resize', outlineWindows, { passive: true });
   </script>
 </body>
 </html>

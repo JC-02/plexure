@@ -9,6 +9,9 @@ viewport, the full page, any element, or clip it to an arbitrary shape.
   `'35%'` work too.
 - Mask the field with any CSS `clip-path` or a `Path2D`, or confine the simulation itself
   to a shape so particles live inside it instead of drifting out behind a mask.
+- Show one field through several containers at once with `clipTo: { windows }`. A particle
+  leaving one window reappears in the next, because it is the same field behind all of
+  them.
 - Several fields on one page share a single animation loop, and only the hovered one
   reacts to the pointer.
 - Correct by default: honours `prefers-reduced-motion`, pauses when the tab is hidden or
@@ -42,6 +45,12 @@ const field = createPlexure(document.querySelector('#hero'), {
 // Or the whole viewport / page
 createPlexure('viewport');
 createPlexure('page');
+
+// One field spanning a wrapper, visible only through its child windows. Corner radii come
+// from each window's own CSS, and the mask follows them as they resize.
+createPlexure(document.querySelector('#group'), {
+  clipTo: { windows: '.card' },
+});
 
 // The handle
 field.setOptions({ intensity: 0.5 }); // merge live, no restart, no layout reads

@@ -1,4 +1,4 @@
-import type { PlexureOptions, ShapeClip } from './types';
+import type { PlexureOptions, ShapeClip, WindowClip } from './types';
 
 /** A clip resolved into container pixel space, ready for both clipping and containment. */
 export interface ResolvedShape {
@@ -20,6 +20,63 @@ const CACHE_MAX = 64;
 
 function isShapeClip(clip: PlexureOptions['clipTo']): clip is ShapeClip {
   return !!clip && typeof clip === 'object' && !(clip instanceof Path2D) && 'path' in clip;
+}
+
+export function isWindowClip(clip: PlexureOptions['clipTo']): clip is WindowClip {
+  return !!clip && typeof clip === 'object' && !(clip instanceof Path2D) && 'windows' in clip;
+}
+
+/** Resolve the window list, tolerating a selector that matches nothing or does not parse. */
+export function windowElements(spec: WindowClip['windows'], host: Element): Element[] {
+  if (typeof spec !== 'string') return spec ? spec.filter(Boolean) : [];
+  try {
+    return [...host.querySelectorAll(spec)];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * One CSS corner radius in pixels. Percentages resolve against the box, and an elliptical
+ * radius (`10px / 20px`) uses its horizontal component, which keeps the mask a close match
+ * without parsing the full two-axis grammar.
+ */
+function corner(value: string, extent: number): number {
+  const first = value.split(' ')[0];
+  const n = Number.parseFloat(first);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return first.endsWith('%') ? (n / 100) * extent : n;
+}
+
+/**
+ * The union of the window elements as one path, in canvas coordinates. Overlapping windows
+ * merge under the nonzero fill rule, so they need no deduplication.
+ *
+ * Always returns a path, empty when nothing resolved. An empty clip paints nothing, which
+ * is what "visible only through these windows" means when there are none, and it avoids a
+ * flash of unmasked field when the windows mount after the field does.
+ */
+export function windowsPath(elements: Element[], originX: number, originY: number): Path2D {
+  const path = new Path2D();
+  const rounded = typeof path.roundRect === 'function';
+  for (const el of elements) {
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) continue;
+    const x = r.left - originX;
+    const y = r.top - originY;
+    if (!rounded) {
+      path.rect(x, y, r.width, r.height);
+      continue;
+    }
+    const style = getComputedStyle(el);
+    path.roundRect(x, y, r.width, r.height, [
+      corner(style.borderTopLeftRadius, r.width),
+      corner(style.borderTopRightRadius, r.width),
+      corner(style.borderBottomRightRadius, r.width),
+      corner(style.borderBottomLeftRadius, r.width),
+    ]);
+  }
+  return path;
 }
 
 /**

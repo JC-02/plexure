@@ -2,7 +2,7 @@ import { type ParsedColor, parseColor } from './color';
 import { defaults, mergeOptions, resolveDistance } from './options';
 import { claimPointer, pointerOwner, releasePointer } from './pointer';
 import { createRng } from './rng';
-import { resolveShape } from './shape';
+import { isWindowClip, resolveShape, windowElements, windowsPath } from './shape';
 import { startTick, stopTick } from './ticker';
 import type { PlexureInput, PlexureInstance, PlexureTarget } from './types';
 
@@ -103,6 +103,8 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
   const anchors: [number, number][] = [];
   /** Device-pixel scale currently applied to the context. */
   let dpr = 1;
+  /** Windows currently under ResizeObserver, so the mask follows them as they move. */
+  let observedWindows: Element[] = [];
 
   let destroyed = false;
   let userPaused = false;
@@ -293,6 +295,30 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
   }
 
   /**
+   * Top-left of the canvas in client coordinates. An element canvas fills the host's
+   * padding box, a viewport canvas sits at the viewport origin, and a page canvas sits at
+   * the document origin.
+   */
+  function canvasOrigin(): [number, number] {
+    if (mode === 'element') return [rectLeft, rectTop];
+    if (mode === 'viewport') return [0, 0];
+    return [-window.scrollX, -window.scrollY];
+  }
+
+  /**
+   * Watch the windows themselves, not only the host. A window can change size while the
+   * host does not, and the mask has to follow it.
+   */
+  function syncWindowObservers(next: Element[]): void {
+    const same =
+      next.length === observedWindows.length && next.every((el, i) => el === observedWindows[i]);
+    if (same) return;
+    for (const el of observedWindows) ro?.unobserve(el);
+    for (const el of next) ro?.observe(el);
+    observedWindows = next;
+  }
+
+  /**
    * Resolve `clipTo` against the current box. A shape that cannot be sampled at all is
    * kept as a render clip but dropped from the simulation, so a degenerate path degrades
    * to masking alone rather than producing an empty field.
@@ -300,6 +326,20 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
   function resolveClip(): void {
     anchors.length = 0;
     const clip = o.clipTo;
+    if (isWindowClip(clip)) {
+      // Masked, never confined: the point is one continuous field behind several
+      // apertures, so a particle leaving one window reappears in the next.
+      if (mode === 'element') updateRect();
+      const els = windowElements(clip.windows, host);
+      const [ox, oy] = canvasOrigin();
+      clipPath = windowsPath(els, ox, oy);
+      simShape = null;
+      shapeBox = null;
+      shapeArea = 0;
+      syncWindowObservers(els);
+      return;
+    }
+    syncWindowObservers([]);
     if (clip instanceof Path2D) {
       clipPath = clip;
       simShape = null;
@@ -854,6 +894,7 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
       cleanups.length = 0;
       ro?.disconnect();
       io?.disconnect();
+      observedWindows = [];
       releasePointer(token);
       canvas.remove();
       if (hostPositionSet) host.style.position = '';

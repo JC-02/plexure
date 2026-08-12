@@ -14,6 +14,7 @@ export type {
   PlexureTarget,
   ShapeClip,
   StarOptions,
+  WindowClip,
 } from './types';
 
 /**
