@@ -39,6 +39,20 @@ function isIgnored(target: EventTarget | null): boolean {
 }
 
 /**
+ * Handle returned when there is nothing to render into — no DOM at all (SSR), or a DOM
+ * without a working 2D canvas (jsdom and friends). Every call is a silent no-op, so host
+ * code and test suites can treat it exactly like a live field.
+ */
+export const inert: PlexureInstance = {
+  setOptions() {},
+  pause() {},
+  resume() {},
+  refresh() {},
+  destroy() {},
+  isRunning: false,
+};
+
+/**
  * Written as a closure rather than a class deliberately: every internal binding minifies
  * to one or two characters, where class members keep their full names in the bundle.
  */
@@ -88,6 +102,10 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
   /* -------------------------------------------------------------------- canvas */
 
   const canvas = document.createElement('canvas');
+  // Probed before anything is appended or restyled: an environment with no 2D context
+  // leaves the host exactly as it was found rather than a mutated DOM and a thrown error.
+  const ctx = canvas.getContext('2d', { alpha: true });
+  if (!ctx) return inert;
   canvas.setAttribute('aria-hidden', 'true');
   const cs = canvas.style;
   cs.pointerEvents = 'none';
@@ -101,8 +119,6 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     hostPositionSet = true;
   }
   host.appendChild(canvas);
-  const ctx = canvas.getContext('2d', { alpha: true });
-  if (!ctx) throw new Error('plexure: 2d canvas context unavailable');
 
   /* -------------------------------------------------------------------- wiring */
 

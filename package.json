@@ -6,12 +6,18 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p tsconfig.test.json",
     "lint": "biome check .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run --project node",
+    "test:browser": "vitest run --project browser"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
+    "@vitest/browser-playwright": "^4.1.10",
+    "jsdom": "^30.0.1",
     "tsup": "^8.5.0",
     "typescript": "^5.9.0"
   }

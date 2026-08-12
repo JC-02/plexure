@@ -47,6 +47,11 @@
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
-    "react": "^19.0.0"
+    "@types/react-dom": "^19.2.4",
+    "@vitest/browser": "^4.1.10",
+    "playwright": "^1.62.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.2.8",
+    "vitest": "^4.1.10"
   }
 }

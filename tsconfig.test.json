@@ -1,0 +1,9 @@
+{
+  "//": "Tests are typechecked separately so each package's tsconfig keeps describing exactly what ships.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["packages/*/test"]
+}
