@@ -1,12 +1,14 @@
 # plexure
 
 A drifting field of points connected by lines, reacting to the pointer. Scope it to the
-viewport, the full page, any element — or clip it to an arbitrary shape.
+viewport, the full page, any element, or clip it to an arbitrary shape.
 
-- **~4.8 kB gzipped, zero dependencies.**
-- Scope to any element, not just full-screen. Distances safety-clamp so viewport defaults
-  stay legible inside a 300 px card, or use `'35%'`-style relative units.
-- Clip the field to a shape with any CSS `clip-path` or a `Path2D`.
+- **~6 kB gzipped, zero dependencies.**
+- Scope to any element, not just full-screen. The engine clamps absolute distances to the
+  container, so viewport defaults stay legible inside a 300 px card. Relative units like
+  `'35%'` work too.
+- Mask the field with any CSS `clip-path` or a `Path2D`, or confine the simulation itself
+  to a shape so particles live inside it instead of drifting out behind a mask.
 - Several fields on one page share a single animation loop, and only the hovered one
   reacts to the pointer.
 - Correct by default: honours `prefers-reduced-motion`, pauses when the tab is hidden or
@@ -50,11 +52,10 @@ field.destroy(); // removes the canvas and every listener
 field.isRunning;
 ```
 
-Every option, with defaults, is documented in the
-[`PlexureOptions` type](https://github.com/JC-02/plexure/blob/main/packages/core/src/types.ts)
-— colours accept any CSS colour including
-`var(--custom-properties)`, and distances accept px numbers or `'35%'`-style fractions of
-the smaller container edge.
+The [`PlexureOptions` type](https://github.com/JC-02/plexure/blob/main/packages/core/src/types.ts)
+documents every option and its default. Colours accept any CSS colour, including
+`var(--custom-properties)`. Distances accept px numbers, or `'35%'`-style fractions of the
+smaller container edge.
 
 React bindings: [`@plexure/react`](../react).
 

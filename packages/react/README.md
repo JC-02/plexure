@@ -1,7 +1,7 @@
 # @plexure/react
 
-React bindings for [plexure](https://www.npmjs.com/package/plexure) — a drifting field of
-points connected by lines, reacting to the pointer. Under 5 kB gzipped, zero dependencies.
+React bindings for [plexure](https://www.npmjs.com/package/plexure), a drifting field of
+points connected by lines, reacting to the pointer. ~6 kB gzipped, zero dependencies.
 
 ## Install
 
@@ -29,9 +29,9 @@ function Hero() {
 }
 ```
 
-`<Plexure />` renders a host `div`, mounts the field into it on mount, applies prop changes
-live through `setOptions` (no restart, no layout reads — safe to drive `intensity` from
-scroll), and destroys the field on unmount. A `ref` exposes the core handle
+`<Plexure />` renders a host `div` and mounts the field into it. It applies prop changes
+live through `setOptions`, with no restart and no layout reads, so you can drive
+`intensity` from scroll. Unmounting destroys the field. A `ref` exposes the core handle
 (`pause()`, `resume()`, `refresh()`, `destroy()`, `isRunning`).
 
 All options are the core library's [`PlexureOptions`](https://github.com/JC-02/plexure/blob/main/packages/core/src/types.ts):
