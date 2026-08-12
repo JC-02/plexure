@@ -1,7 +1,16 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createPlexure } from '../src/index';
 import type { PlexureInput, PlexureInstance } from '../src/types';
-import { canvasIn, cleanup, mountHost, RESIZE_SETTLE_MS, sample, track, wait } from './helpers';
+import {
+  canvasIn,
+  cleanup,
+  mountHost,
+  nextFrames,
+  RESIZE_SETTLE_MS,
+  sample,
+  track,
+  wait,
+} from './helpers';
 
 afterEach(cleanup);
 
@@ -57,6 +66,50 @@ describe('determinism', () => {
     field.pause();
     field.refresh();
     expect(sample(canvasIn(a)).centroid.x).toBeCloseTo(before, 6);
+  });
+
+  // Seeding determinism is not simulation determinism: the tests above freeze the field
+  // before it steps. This one lets it run, so a stray Math.random() anywhere in step() or
+  // respawn() shows up. Both fields ride the same shared ticker, so they receive an
+  // identical dt every frame and must stay in lockstep.
+  it('stays identical after many stepped frames with the same seed', async () => {
+    const a = mountHost(400, 300);
+    const b = mountHost(400, 300);
+    const drifting = mountHost(400, 300);
+    track(createPlexure(a, { count: 60, seed: 42, maxDpr: 1, ...DOTS_ONLY }));
+    track(createPlexure(b, { count: 60, seed: 42, maxDpr: 1, ...DOTS_ONLY }));
+    track(createPlexure(drifting, { count: 60, seed: 43, maxDpr: 1, ...DOTS_ONLY }));
+
+    await nextFrames(20);
+
+    const sa = sample(canvasIn(a));
+    const sb = sample(canvasIn(b));
+    expect(sa.painted).toBeGreaterThan(0);
+    expect(sa.painted).toBe(sb.painted);
+    expect(sa.centroid.x).toBeCloseTo(sb.centroid.x, 6);
+    expect(sa.centroid.y).toBeCloseTo(sb.centroid.y, 6);
+    // Guards the comparison from being trivially true: a different seed must diverge.
+    expect(sample(canvasIn(drifting)).centroid.x).not.toBeCloseTo(sa.centroid.x, 3);
+  });
+
+  it('keeps a seeded field reproducible across a respawn cycle', async () => {
+    const a = mountHost(200, 150);
+    const b = mountHost(200, 150);
+    // 'respawn' recycles particles through spawn(), so the RNG is consumed while running.
+    const opts = {
+      count: 40,
+      seed: 8,
+      maxDpr: 1,
+      edgeBehaviour: 'respawn' as const,
+      ...DOTS_ONLY,
+    };
+    track(createPlexure(a, opts));
+    track(createPlexure(b, opts));
+
+    await nextFrames(30);
+
+    expect(sample(canvasIn(a)).painted).toBe(sample(canvasIn(b)).painted);
+    expect(sample(canvasIn(a)).centroid.x).toBeCloseTo(sample(canvasIn(b)).centroid.x, 6);
   });
 
   it('applies a new seed to particles spawned after the change', () => {
@@ -150,6 +203,109 @@ describe('links', () => {
     still(near, { count: 100, cursor: { enabled: false }, link: { distance: 20 } });
     still(far, { count: 100, cursor: { enabled: false }, link: { distance: 130 } });
     expect(sample(canvasIn(far)).painted).toBeGreaterThan(sample(canvasIn(near)).painted);
+  });
+});
+
+describe('spatial hash', () => {
+  /**
+   * Read one frame twice over: every particle draws exactly one `arc`, which gives their
+   * real positions, and every particle-to-particle link is one `stroke`. With the cursor
+   * off, nothing else strokes.
+   */
+  function readFrame(field: PlexureInstance): { points: Array<[number, number]>; strokes: number } {
+    // Pause first, outside the patch: pause() renders its own still frame, which would
+    // otherwise be captured too and double every count.
+    field.pause();
+
+    const proto = CanvasRenderingContext2D.prototype;
+    const origArc = proto.arc;
+    const origStroke = proto.stroke;
+    const points: Array<[number, number]> = [];
+    let strokes = 0;
+    proto.arc = function (this: CanvasRenderingContext2D, x: number, y: number, ...rest) {
+      points.push([x, y]);
+      return origArc.call(this, x, y, ...(rest as [number, number, number, boolean?]));
+    };
+    proto.stroke = function (this: CanvasRenderingContext2D, ...args: []) {
+      strokes++;
+      return origStroke.apply(this, args);
+    };
+    try {
+      field.refresh();
+    } finally {
+      proto.arc = origArc;
+      proto.stroke = origStroke;
+    }
+    return { points, strokes };
+  }
+
+  function bruteForcePairs(points: Array<[number, number]>, within: number): number {
+    let pairs = 0;
+    for (let i = 0; i < points.length; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const dx = points[i][0] - points[j][0];
+        const dy = points[i][1] - points[j][1];
+        if (dx * dx + dy * dy < within * within) pairs++;
+      }
+    }
+    return pairs;
+  }
+
+  // The grid replaced a stacked O(n²) scan, and the neighbour walk only visits four of the
+  // eight neighbours so each pair is covered once. Checking it against brute force over the
+  // real positions catches both failure modes at once: a missed pair and a doubled one.
+  it('links every in-range pair exactly once, across many cells', () => {
+    const host = mountHost(400, 300);
+    // distance 60 over a 400×300 box gives a 7×5 grid, so cross-cell coverage matters.
+    const field = track(
+      createPlexure(host, {
+        count: 90,
+        seed: 5,
+        maxDpr: 1,
+        clampDistances: false,
+        cursor: { enabled: false },
+        link: { distance: 60 },
+      }),
+    );
+
+    const { points, strokes } = readFrame(field);
+    expect(points).toHaveLength(90);
+    const expected = bruteForcePairs(points, 60);
+    expect(expected).toBeGreaterThan(20);
+    expect(strokes).toBe(expected);
+  });
+
+  it('agrees with brute force when the whole field fits in one cell', () => {
+    const host = mountHost(400, 300);
+    const field = track(
+      createPlexure(host, {
+        count: 24,
+        seed: 11,
+        maxDpr: 1,
+        clampDistances: false,
+        cursor: { enabled: false },
+        link: { distance: 5000 },
+      }),
+    );
+
+    const { points, strokes } = readFrame(field);
+    // Every pair is in range, so this pins the exact combination count.
+    expect(strokes).toBe((points.length * (points.length - 1)) / 2);
+  });
+
+  it('draws no links at all when the range is tiny', () => {
+    const host = mountHost(400, 300);
+    const field = track(
+      createPlexure(host, {
+        count: 30,
+        seed: 3,
+        maxDpr: 1,
+        clampDistances: false,
+        cursor: { enabled: false },
+        link: { distance: 1 },
+      }),
+    );
+    expect(readFrame(field).strokes).toBe(0);
   });
 });
 

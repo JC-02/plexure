@@ -5,13 +5,16 @@ import {
   cleanup,
   countCalls,
   countCallsOver,
+  cursorLinks,
   mountHost,
   particleCount,
   RESIZE_SETTLE_MS,
+  setTabHidden,
   stubReducedMotion,
   track,
   trackListeners,
   wait,
+  withFakeIntersectionObserver,
 } from './helpers';
 
 afterEach(cleanup);
@@ -285,6 +288,97 @@ describe('lifecycle', () => {
     const field = createPlexure(host, { count: 10 });
     field.destroy();
     expect(await countCallsOver('clearRect', 120)).toBe(0);
+  });
+});
+
+describe('hidden tab', () => {
+  it('stops the ticker while the tab is hidden', async () => {
+    const host = mountHost(400, 300);
+    const field = track(createPlexure(host, { count: 10 }));
+    expect(field.isRunning).toBe(true);
+
+    const restore = setTabHidden(true);
+    try {
+      expect(field.isRunning).toBe(false);
+      expect(await countCallsOver('clearRect', 120)).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+
+  it('resumes when the tab comes back', () => {
+    const host = mountHost(400, 300);
+    const field = track(createPlexure(host, { count: 10 }));
+    const restore = setTabHidden(true);
+    expect(field.isRunning).toBe(false);
+    restore();
+    expect(field.isRunning).toBe(true);
+  });
+
+  it('does not resume a field the user paused', () => {
+    const host = mountHost(400, 300);
+    const field = track(createPlexure(host));
+    field.pause();
+    const restore = setTabHidden(true);
+    restore();
+    expect(field.isRunning).toBe(false);
+  });
+
+  it('keeps running when pauseWhenHidden is off', () => {
+    const host = mountHost(400, 300);
+    const field = track(createPlexure(host, { pauseWhenHidden: false }));
+    const restore = setTabHidden(true);
+    try {
+      expect(field.isRunning).toBe(true);
+    } finally {
+      restore();
+    }
+  });
+
+  it('drops the pointer claim so no field is left holding it', () => {
+    const host = mountHost(400, 300);
+    const field = track(createPlexure(host, { count: 60, maxDpr: 1 }));
+    const r = host.getBoundingClientRect();
+    host.dispatchEvent(
+      new PointerEvent('pointerenter', { clientX: r.left + 200, clientY: r.top + 150 }),
+    );
+    const restore = setTabHidden(true);
+    try {
+      expect(cursorLinks(field, 200, 150)).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+});
+
+describe('offscreen', () => {
+  it('stops while the host is scrolled out of view', () => {
+    const host = mountHost(400, 300);
+    const io = withFakeIntersectionObserver(() =>
+      track(createPlexure(host, { count: 10, pauseWhenOffscreen: true })),
+    );
+    try {
+      expect(io.result.isRunning).toBe(true);
+      io.setIntersecting(false);
+      expect(io.result.isRunning).toBe(false);
+      io.setIntersecting(true);
+      expect(io.result.isRunning).toBe(true);
+    } finally {
+      io.restore();
+    }
+  });
+
+  it('ignores intersection changes when pauseWhenOffscreen is off', () => {
+    const host = mountHost(400, 300);
+    const io = withFakeIntersectionObserver(() =>
+      track(createPlexure(host, { count: 10, pauseWhenOffscreen: false })),
+    );
+    try {
+      io.setIntersecting(false);
+      expect(io.result.isRunning).toBe(true);
+    } finally {
+      io.restore();
+    }
   });
 });
 

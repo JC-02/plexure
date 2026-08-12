@@ -254,6 +254,66 @@ export function wait(ms: number): Promise<void> {
 export const RESIZE_SETTLE_MS = 220;
 
 /**
+ * Report a value for `document.hidden` and fire the event the field listens for. A real
+ * tab switch cannot be provoked from a test, and `hidden` is a getter on the prototype, so
+ * it has to be redefined rather than assigned.
+ */
+export function setTabHidden(hidden: boolean): () => void {
+  const original = Object.getOwnPropertyDescriptor(Document.prototype, 'hidden');
+  Object.defineProperty(Document.prototype, 'hidden', {
+    configurable: true,
+    get: () => hidden,
+  });
+  document.dispatchEvent(new Event('visibilitychange'));
+  return () => {
+    if (original) Object.defineProperty(Document.prototype, 'hidden', original);
+    else delete (Document.prototype as unknown as Record<string, unknown>).hidden;
+    document.dispatchEvent(new Event('visibilitychange'));
+  };
+}
+
+/**
+ * Swap in a fake IntersectionObserver and hand back the trigger for its callback, so
+ * offscreen behaviour can be driven directly instead of by scrolling and hoping. Whatever
+ * `fn` creates is returned alongside.
+ */
+export function withFakeIntersectionObserver<T>(fn: () => T): {
+  result: T;
+  setIntersecting: (isIntersecting: boolean) => void;
+  restore: () => void;
+} {
+  const original = window.IntersectionObserver;
+  let callback: IntersectionObserverCallback | undefined;
+  class Fake {
+    constructor(cb: IntersectionObserverCallback) {
+      callback = cb;
+    }
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  }
+  window.IntersectionObserver = Fake as unknown as typeof IntersectionObserver;
+  let result: T;
+  try {
+    result = fn();
+  } catch (e) {
+    window.IntersectionObserver = original;
+    throw e;
+  }
+  return {
+    result,
+    setIntersecting: (isIntersecting: boolean) =>
+      callback?.([{ isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver),
+    restore: () => {
+      window.IntersectionObserver = original;
+    },
+  };
+}
+
+/**
  * Force `matchMedia('(prefers-reduced-motion: reduce)')` to report a value for the duration
  * of a test. The field reads it once at construction, so this must be installed first.
  */
