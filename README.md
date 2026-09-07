@@ -1,15 +1,16 @@
 # plexure
 
-A drifting field of points connected by lines, reacting to the pointer. Scope it to the
-viewport, the full page, any element, or clip it to an arbitrary shape. ~6 kB
+A drifting field of points connected by lines, reacting to the pointer. It goes where you
+put it. A hero, a card, an odd shape, or several containers sharing one field. ~6 kB
 gzipped, zero dependencies.
 
-This is the monorepo. The packages:
+<!-- TODO(demo): drop the GIF here once recorded, using an absolute raw.githubusercontent
+     URL so it survives being rendered outside GitHub. -->
 
-| Package | What |
+| Package | |
 |---|---|
 | [`plexure`](packages/core) | The engine. Zero dependencies. |
-| [`@plexure/react`](packages/react) | Thin React bindings. |
+| [`@plexure/react`](packages/react) | A component wrapper, under 500 B. |
 
 Docs and playground: [plexure.dev](https://plexure.dev) *(coming soon)*
 
@@ -24,7 +25,17 @@ npm test            # node + headless chromium
 ```
 
 Serve the repo root with `npx http-server -c-1 .` and open `/apps/playground/` for the dev
-harness. The `-c-1` disables caching, so you get the bundle you just built.
+harness. The `-c-1` disables caching, so you get the bundle from your last build.
+
+The harness is eight pages of manual checks, one per behaviour.
+
+## Layout
+
+```
+packages/core     the engine
+packages/react    the React wrapper
+apps/playground   the manual test harness
+```
 
 ## License
 
