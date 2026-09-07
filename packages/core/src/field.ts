@@ -365,9 +365,9 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
       return;
     }
     const resolved = resolveShape(clip, width, height);
-    clipPath = resolved && resolved.path;
+    clipPath = resolved?.path ?? null;
     simShape = clipPath;
-    shapeBox = resolved && resolved.box;
+    shapeBox = resolved?.box ?? null;
     if (simShape && !pick()) simShape = null;
     shapeArea = simShape ? estimateShapeArea() : 0;
   }
@@ -530,6 +530,7 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     const margin = edgeDist;
     // Friction is a per-frame decay, so dt scales it as an exponent.
     const fr = friction === 1 ? 1 : friction ** dt;
+    const repel = cursor.mode === 'repel' ? -1 : 1;
 
     for (const p of particles) {
       if (active) {
@@ -538,7 +539,7 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
         const d2 = dx * dx + dy * dy;
         if (d2 > 1 && d2 < cr2) {
           const d = Math.sqrt(d2);
-          const pull = ((cr - d) / cr) * cursor.strength * dt;
+          const pull = ((cr - d) / cr) * cursor.strength * dt * repel;
           p.vx += (dx / d) * pull;
           p.vy += (dy / d) * pull;
         }
@@ -664,8 +665,10 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     }
 
     // Nearest-k to the pointer, by insertion into a fixed small buffer. Cheaper than
-    // sorting the whole field every frame.
-    if (pointerActive()) {
+    // sorting the whole field every frame. Guarded on a positive k: the buffer's
+    // "is this closer than my worst?" branch reads best[-1] when k is 0, and skipping
+    // the scan entirely is also what a caller asking for no links wants.
+    if (pointerActive() && o.cursor.maxLinks > 0) {
       const maxLinks = o.cursor.maxLinks;
       const px = pointer.x;
       const py = pointer.y;

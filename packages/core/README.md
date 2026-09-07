@@ -52,8 +52,14 @@ createPlexure(document.querySelector('#group'), {
   clipTo: { windows: '.card' },
 });
 
+// The pointer can push instead of pull
+createPlexure(document.querySelector('#hero'), {
+  cursor: { mode: 'repel' },
+});
+
 // The handle
 field.setOptions({ intensity: 0.5 }); // merge live, no restart, no layout reads
+field.setOptions({ count: null }); // null clears an option, back to the default
 field.pause();
 field.resume();
 field.refresh(); // force a re-measure
@@ -65,6 +71,10 @@ The [`PlexureOptions` type](https://github.com/JC-02/plexure/blob/main/packages/
 documents every option and its default. Colours accept any CSS colour, including
 `var(--custom-properties)`. Distances accept px numbers, or `'35%'`-style fractions of the
 smaller container edge.
+
+In `setOptions`, an omitted key leaves that option alone, so `null` is how you clear one:
+`count: null` goes back to counting from `density`, and `seed: null` back to unseeded
+placement.
 
 ## Guarantees
 

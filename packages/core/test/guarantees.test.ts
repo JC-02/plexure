@@ -15,7 +15,10 @@ function breakDrawing(times = Number.POSITIVE_INFINITY): () => void {
   const proto = CanvasRenderingContext2D.prototype;
   const original = proto.clearRect;
   let left = times;
-  proto.clearRect = function (this: CanvasRenderingContext2D, ...args: [number, number, number, number]) {
+  proto.clearRect = function (
+    this: CanvasRenderingContext2D,
+    ...args: [number, number, number, number]
+  ) {
     if (left-- > 0) throw new Error('synthetic render failure');
     return original.apply(this, args);
   };
@@ -240,6 +243,27 @@ describe('bad input degrades instead of throwing', () => {
       field.resume();
     }).not.toThrow();
     await wait(60);
+  });
+
+  /**
+   * The cursor's nearest-k buffer only runs while the pointer is inside the field, so this
+   * needs a real hover — the cases above would never reach it. Asking for zero links used
+   * to read best[-1] and take the field down three frames later.
+   */
+  it.each([
+    ['zero cursor links', 0],
+    ['a negative cursor link count', -3],
+  ])('survives %s while the pointer is over the field', async (_label, maxLinks) => {
+    const host = mountHost(400, 300);
+    const field = track(createPlexure(host, { count: 40, cursor: { maxLinks } }));
+    const r = host.getBoundingClientRect();
+    host.dispatchEvent(
+      new PointerEvent('pointerenter', { clientX: r.left + 200, clientY: r.top + 150 }),
+    );
+    await wait(120);
+    // Still drawing: a halted field stops clearing the canvas entirely.
+    expect(await countCallsOver('clearRect', 200)).toBeGreaterThan(2);
+    expect(field.isRunning).toBe(true);
   });
 
   /**

@@ -12,10 +12,10 @@
 </head>
 <body>
   <div class="controls" data-plexure-ignore>
-    <button id="pauseAll">Pause all</button>
-    <button id="resumeAll">Resume all</button>
-    <button id="destroyAll">Destroy all</button>
-    <button id="recreateAll">Recreate all</button>
+    <button type="button" id="pauseAll">Pause all</button>
+    <button type="button" id="resumeAll">Resume all</button>
+    <button type="button" id="destroyAll">Destroy all</button>
+    <button type="button" id="recreateAll">Recreate all</button>
     <label>intensity <input id="intensity" type="range" min="0" max="1" step="0.05" value="1" /></label>
     <span class="note" id="status"></span>
   </div>
@@ -50,6 +50,8 @@
       ['fixed count: 12', { count: 12 }],
       ['cursor disabled', { cursor: { enabled: false } }],
       ['strong pull', { cursor: { strength: 0.18, radius: '80%' } }],
+      ['cursor: repel', { cursor: { mode: 'repel' } }],
+      ['repel, strong', { cursor: { mode: 'repel', strength: 1.2, radius: '80%' } }],
       ['seed 42 — twin A', { seed: 42 }],
       ['seed 42 — twin B (must match A exactly)', { seed: 42 }],
       ['half intensity', { intensity: 0.5 }],
@@ -66,15 +68,20 @@
         grid.appendChild(el);
         return plexure.createPlexure(el, JSON.parse(JSON.stringify(opts)));
       });
-      status.textContent = fields.length + ' fields, one shared loop';
+      status.textContent = `${fields.length} fields, one shared loop`;
     };
     const status = document.getElementById('status');
     build();
-    document.getElementById('pauseAll').onclick = () => fields.forEach((f) => f.pause());
-    document.getElementById('resumeAll').onclick = () => fields.forEach((f) => f.resume());
-    document.getElementById('destroyAll').onclick = () => { fields.forEach((f) => f.destroy()); status.textContent = 'destroyed — canvases: ' + document.querySelectorAll('canvas').length; };
+    document.getElementById('pauseAll').onclick = () => { for (const f of fields) f.pause(); };
+    document.getElementById('resumeAll').onclick = () => { for (const f of fields) f.resume(); };
+    document.getElementById('destroyAll').onclick = () => {
+      for (const f of fields) f.destroy();
+      status.textContent = `destroyed — canvases: ${document.querySelectorAll('canvas').length}`;
+    };
     document.getElementById('recreateAll').onclick = build;
-    document.getElementById('intensity').oninput = (e) => fields.forEach((f) => f.setOptions({ intensity: Number(e.target.value) }));
+    document.getElementById('intensity').oninput = (e) => {
+      for (const f of fields) f.setOptions({ intensity: Number(e.target.value) });
+    };
     window.fields = fields;
   </script>
 </body>

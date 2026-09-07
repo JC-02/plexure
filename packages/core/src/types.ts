@@ -31,6 +31,11 @@ export interface LinkOptions {
 export interface CursorOptions {
   /** Master switch for pointer interaction. */
   enabled: boolean;
+  /**
+   * Whether the pointer draws particles in or pushes them away. `'repel'` is the same
+   * force with the sign flipped, so `strength` means the same thing in both.
+   */
+  mode: 'attract' | 'repel';
   /** Reach of the pointer's pull. */
   radius: Distance;
   /** How hard the pointer pulls, in velocity gained per frame at zero distance. */
@@ -89,7 +94,10 @@ export interface WindowClip {
 export interface PlexureOptions {
   /** Square pixels of surface per particle. Lower is denser. */
   density: number;
-  /** Absolute particle count. Overrides `density` and the count clamps when set. */
+  /**
+   * Absolute particle count. Overrides `density` and the count clamps when set. Pass
+   * `null` to `setOptions` to clear it and go back to density-derived counting.
+   */
   count: number | undefined;
   minCount: number;
   maxCount: number;
@@ -149,8 +157,10 @@ export interface PlexureInput
   star?: Partial<StarOptions>;
   link?: Partial<LinkOptions>;
   cursor?: Partial<CursorOptions>;
-  count?: number;
-  seed?: number;
+  /** `null` clears an earlier `count`, restoring density-derived counting. */
+  count?: number | null;
+  /** `null` clears an earlier `seed`, restoring unseeded `Math.random` placement. */
+  seed?: number | null;
   className?: string;
 }
 

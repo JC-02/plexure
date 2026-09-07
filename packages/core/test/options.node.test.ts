@@ -133,3 +133,45 @@ describe('defaults', () => {
     expect(o.clipTo).toBeNull();
   });
 });
+
+describe('unsetting count and seed', () => {
+  // `undefined` already means "leave as is", so without `null` there is no way back to
+  // density-derived counting once an absolute count has been set.
+  it('null clears count, restoring density-derived counting', () => {
+    const withCount = mergeOptions(defaults, { count: 40 });
+    expect(withCount.count).toBe(40);
+    expect(mergeOptions(withCount, { count: null }).count).toBeUndefined();
+  });
+
+  it('null clears seed, restoring unseeded placement', () => {
+    const seeded = mergeOptions(defaults, { seed: 7 });
+    expect(seeded.seed).toBe(7);
+    expect(mergeOptions(seeded, { seed: null }).seed).toBeUndefined();
+  });
+
+  it('undefined still leaves an existing count and seed alone', () => {
+    const set = mergeOptions(defaults, { count: 40, seed: 7 });
+    const after = mergeOptions(set, { count: undefined, seed: undefined });
+    expect(after.count).toBe(40);
+    expect(after.seed).toBe(7);
+  });
+
+  // A cleared count must not survive as a null that targetCount() would read as a number.
+  it('leaves no null behind for the count maths to trip over', () => {
+    const cleared = mergeOptions(mergeOptions(defaults, { count: 40 }), { count: null });
+    expect(cleared.count).not.toBeNull();
+  });
+});
+
+describe('cursor.mode', () => {
+  it('defaults to attract', () => {
+    expect(defaults.cursor.mode).toBe('attract');
+  });
+
+  it('merges like any other cursor key, leaving the rest intact', () => {
+    const merged = mergeOptions(defaults, { cursor: { mode: 'repel' } });
+    expect(merged.cursor.mode).toBe('repel');
+    expect(merged.cursor.strength).toBe(defaults.cursor.strength);
+    expect(merged.cursor.enabled).toBe(defaults.cursor.enabled);
+  });
+});

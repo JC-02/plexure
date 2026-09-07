@@ -18,6 +18,7 @@ export const defaults: PlexureOptions = {
   link: { distance: 130, width: 0.7, opacity: 0.32, color: '#EBE9E4' },
   cursor: {
     enabled: true,
+    mode: 'attract',
     radius: 200,
     strength: 0.41,
     maxLinks: 10,
@@ -65,6 +66,10 @@ export function mergeOptions(
   out.star = assign(base.star, input?.star);
   out.link = assign(base.link, input?.link);
   out.cursor = assign(base.cursor, input?.cursor);
+  // `undefined` means "leave as is", so `null` is the only way to say "unset this". Both
+  // fall back to their defaults: density-derived counting, and unseeded placement.
+  if (input?.count === null) out.count = undefined;
+  if (input?.seed === null) out.seed = undefined;
   return out;
 }
 

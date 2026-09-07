@@ -7,8 +7,10 @@ import {
   countCallsOver,
   cursorLinks,
   mountHost,
+  nextFrame,
   particleCount,
   RESIZE_SETTLE_MS,
+  recordCalls,
   setTabHidden,
   stubReducedMotion,
   track,
@@ -477,5 +479,66 @@ describe('listener hygiene', () => {
     } finally {
       tracker.stop();
     }
+  });
+});
+
+describe('cursor.mode', () => {
+  /**
+   * Mean distance from the pointer across every particle, read from the arcs drawn in one
+   * still frame. Drift is zero and friction is 1, so the cursor force is the only thing
+   * that can move a particle — the direction of the change is entirely down to the mode.
+   */
+  async function meanDistanceFromPointer(
+    mode: 'attract' | 'repel',
+    frames: number,
+  ): Promise<number> {
+    const host = mountHost(400, 300);
+    const field = track(
+      createPlexure(host, {
+        seed: 11,
+        count: 60,
+        drift: [0, 0],
+        friction: 1,
+        cursor: { mode, radius: 400, strength: 0.5, maxLinks: 0 },
+      }),
+    );
+    const r = host.getBoundingClientRect();
+    host.dispatchEvent(
+      new PointerEvent('pointerenter', { clientX: r.left + 200, clientY: r.top + 150 }),
+    );
+    for (let i = 0; i < frames; i++) await nextFrame();
+
+    field.pause();
+    const arcs = recordCalls('arc', () => field.refresh());
+    const total = arcs.reduce((sum, [x, y]) => sum + Math.hypot(x - 200, y - 150), 0);
+    return total / arcs.length;
+  }
+
+  it('attract pulls particles toward the pointer', async () => {
+    const start = await meanDistanceFromPointer('attract', 0);
+    cleanup();
+    const after = await meanDistanceFromPointer('attract', 12);
+    expect(after).toBeLessThan(start);
+  });
+
+  it('repel pushes particles away from the pointer', async () => {
+    const start = await meanDistanceFromPointer('repel', 0);
+    cleanup();
+    const after = await meanDistanceFromPointer('repel', 12);
+    expect(after).toBeGreaterThan(start);
+  });
+
+  // Same magnitude, opposite sign: `strength` has to keep meaning the same thing.
+  it('moves the field by a comparable amount in either direction', async () => {
+    const start = await meanDistanceFromPointer('attract', 0);
+    cleanup();
+    const attracted = await meanDistanceFromPointer('attract', 12);
+    cleanup();
+    const repelled = await meanDistanceFromPointer('repel', 12);
+    const pulledIn = start - attracted;
+    const pushedOut = repelled - start;
+    expect(pulledIn).toBeGreaterThan(0);
+    expect(pushedOut).toBeGreaterThan(0);
+    expect(Math.abs(pushedOut - pulledIn)).toBeLessThan(pulledIn);
   });
 });
