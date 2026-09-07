@@ -1,6 +1,6 @@
 {
   "name": "@plexure/react",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "React bindings for plexure — a drifting field of points connected by lines, reacting to the pointer.",
   "license": "MIT",
   "author": "Jordan Cowan (https://github.com/JC-02)",
@@ -39,10 +39,8 @@
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json"
   },
-  "dependencies": {
-    "plexure": "^0.0.1"
-  },
   "peerDependencies": {
+    "plexure": "^0.1.0",
     "react": ">=17"
   },
   "devDependencies": {
@@ -50,6 +48,7 @@
     "@types/react-dom": "^19.2.4",
     "@vitest/browser": "^4.1.10",
     "playwright": "^1.62.1",
+    "plexure": "^0.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.2.8",
     "vitest": "^4.1.10"
