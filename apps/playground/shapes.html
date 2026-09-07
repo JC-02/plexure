@@ -87,8 +87,8 @@
         fig.className = 'shape-fig';
         const el = document.createElement('div');
         el.className = 'shape';
-        el.style.width = w + 'px';
-        el.style.height = h + 'px';
+        el.style.width = `${w}px`;
+        el.style.height = `${h}px`;
         if (clip) el.style.clipPath = clip;
         else el.style.borderRadius = '8px';
         const caption = document.createElement('figcaption');
@@ -113,9 +113,10 @@
       fig.className = 'shape-fig';
       const el = document.createElement('div');
       el.className = 'sq';
-      el.style.width = el.style.height = s + 'px';
+      el.style.width = `${s}px`;
+      el.style.height = `${s}px`;
       const caption = document.createElement('figcaption');
-      caption.textContent = s + 'px';
+      caption.textContent = `${s}px`;
       fig.append(el, caption);
       sizesRow.appendChild(fig);
       plexure.createPlexure(el, {

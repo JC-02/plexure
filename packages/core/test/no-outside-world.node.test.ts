@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -19,9 +19,7 @@ function codeOnly(source: string): string {
 }
 
 function offenders(pattern: RegExp): string[] {
-  return sources
-    .filter(({ code }) => pattern.test(codeOnly(code)))
-    .map(({ name }) => name);
+  return sources.filter(({ code }) => pattern.test(codeOnly(code))).map(({ name }) => name);
 }
 
 it('reads every source file', () => {
@@ -84,7 +82,9 @@ describe('no global side effects at import time', () => {
     for (const { name, code } of sources) {
       const top = codeOnly(code)
         .split('\n')
-        .filter((line) => /^\S/.test(line) && !/^(import|export|type|interface|declare)/.test(line));
+        .filter(
+          (line) => /^\S/.test(line) && !/^(import|export|type|interface|declare)/.test(line),
+        );
       const joined = top.join('\n');
       expect(joined, `${name} touches a browser global at module scope`).not.toMatch(
         /\b(window|document|navigator|location)\s*\./,

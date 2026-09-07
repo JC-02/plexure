@@ -40,7 +40,7 @@
     const forK = (k) => ({
       drift: [0.18 * k, 0.48 * k],
       cursor: { strength: 0.055 * k * k, color: 'var(--accent)' },
-      friction: Math.pow(0.985, k),
+      friction: 0.985 ** k,
       star: { color: 'var(--ink)' },
       link: { color: 'var(--ink)' },
       density: 7000,
@@ -53,7 +53,7 @@
     let timer;
     document.getElementById('k').oninput = (e) => {
       const k = Number(e.target.value);
-      label.textContent = 'k = ' + k.toFixed(2);
+      label.textContent = `k = ${k.toFixed(2)}`;
       // Drift only applies to newly spawned particles, so rebuild the field (debounced).
       clearTimeout(timer);
       timer = setTimeout(() => {

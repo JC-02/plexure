@@ -120,7 +120,7 @@
       const wrap = document.createElement('div');
       wrap.className = 'swatch';
       wrap.innerHTML =
-        '<h4>' + title + '</h4><code>' + code + '</code><div class="stage"></div>';
+        `<h4>${title}</h4><code>${code}</code><div class="stage"></div>`;
       parent.appendChild(wrap);
       mount(wrap.querySelector('.stage'), options);
     }
@@ -146,7 +146,7 @@
       // distance that read well at full size collapse into a solid blob. Scale both down
       // to keep the panel legible — the point being demonstrated is the placement.
       const raw = fit === 'none';
-      panel(fits, fit, "clipTo: { path: STAR, fit: '" + fit + "' }", {
+      panel(fits, fit, `clipTo: { path: STAR, fit: '${fit}' }`, {
         link: raw ? { distance: 26 } : undefined,
         star: raw ? { size: [0.6, 1.2] } : undefined,
         clipTo: { path: STAR, fit },
@@ -168,7 +168,7 @@
     // --- edge behaviour ------------------------------------------------------
     const edges = document.getElementById('edges');
     for (const edgeBehaviour of ['wrap', 'respawn', 'fade']) {
-      panel(edges, edgeBehaviour, "edgeBehaviour: '" + edgeBehaviour + "'", {
+      panel(edges, edgeBehaviour, `edgeBehaviour: '${edgeBehaviour}'`, {
         edgeBehaviour,
         drift: [1.2, 2.4],
         clipTo: { path: STAR, fit: 'contain' },

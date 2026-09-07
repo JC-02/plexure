@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createPlexure } from '../src/index';
 import type { PlexureInput, PlexureInstance } from '../src/types';
-import { RESIZE_SETTLE_MS, canvasIn, cleanup, mountHost, sample, track, wait } from './helpers';
+import { canvasIn, cleanup, mountHost, RESIZE_SETTLE_MS, sample, track, wait } from './helpers';
 
 afterEach(cleanup);
 
@@ -308,7 +308,13 @@ describe('window clip: staying fresh', () => {
   it('picks up windows added after the field mounted', async () => {
     const host = mountHost(400, 300, { position: 'relative' });
     const field = track(
-      createPlexure(host, { maxDpr: 1, seed: 4, count: 400, clipTo: { windows: '.win' }, ...DOTS_ONLY }),
+      createPlexure(host, {
+        maxDpr: 1,
+        seed: 4,
+        count: 400,
+        clipTo: { windows: '.win' },
+        ...DOTS_ONLY,
+      }),
     );
     field.pause();
     expect(sample(canvasIn(host)).painted).toBe(0);
