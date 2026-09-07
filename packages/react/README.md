@@ -1,5 +1,8 @@
 # @plexure/react
 
+[![npm](https://img.shields.io/npm/v/@plexure/react)](https://www.npmjs.com/package/@plexure/react)
+[![license](https://img.shields.io/npm/l/@plexure/react)](https://github.com/JC-02/plexure/blob/main/LICENSE)
+
 React bindings for [plexure](https://www.npmjs.com/package/plexure), a drifting field of
 points connected by lines, reacting to the pointer.
 

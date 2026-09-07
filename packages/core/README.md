@@ -1,5 +1,9 @@
 # plexure
 
+[![npm](https://img.shields.io/npm/v/plexure)](https://www.npmjs.com/package/plexure)
+[![minified size (gzip)](https://img.shields.io/bundlejs/size/plexure)](https://bundlejs.com/?q=plexure)
+[![license](https://img.shields.io/npm/l/plexure)](https://github.com/JC-02/plexure/blob/main/LICENSE)
+
 A drifting field of points connected by lines, reacting to the pointer.
 
 <!-- TODO(demo): drop the GIF here once recorded. Use an absolute raw.githubusercontent

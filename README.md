@@ -1,5 +1,9 @@
 # plexure
 
+[![npm](https://img.shields.io/npm/v/plexure)](https://www.npmjs.com/package/plexure)
+[![minified size (gzip)](https://img.shields.io/bundlejs/size/plexure)](https://bundlejs.com/?q=plexure)
+[![license](https://img.shields.io/npm/l/plexure)](LICENSE)
+
 A drifting field of points connected by lines, reacting to the pointer. It goes where you
 put it. A hero, a card, an odd shape, or several containers sharing one field.
 Lightweight and dependency-free, under 10 kB gzipped.
