@@ -109,8 +109,8 @@
       const field = createPlexure(el, { ...base, ...options });
       fields.push(field);
       // Outline the shape, so you can see exactly where the boundary is.
-      const clip = options && options.clipTo;
-      if (clip && clip.path && typeof clip.path === 'string') {
+      const clip = options?.clipTo;
+      if (typeof clip?.path === 'string') {
         outlineShape(el, { d: clip.path, fit: clip.fit || 'contain' });
       }
       return field;
