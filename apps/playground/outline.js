@@ -2,14 +2,16 @@
  * Harness-only: draw the outline of a clip shape over its host, so you can see where the
  * boundary actually is and judge whether particles respect it. Not part of the library.
  *
- * Handles the three forms the harness uses:
- *   CSS `polygon(x% y%, …)`  — percentages resolve against width and height independently,
- *                              so a 0..100 viewBox with preserveAspectRatio="none" is exact.
- *   CSS `path('M …')`        — user units are pixels of the border box, so the viewBox is
- *                              the element's own size, 1:1.
- *   `{ d, fit }`             — the library's sim-aware form. SVG's `meet`/`slice` are the
- *                              same maths as `fit: 'contain'`/`'cover'`, against the path's
- *                              tight bounding box.
+ * Handles the three forms the harness uses.
+ *
+ * CSS `polygon(x% y%, ...)` resolves percentages against width and height separately, so a
+ * 0..100 viewBox with preserveAspectRatio="none" is exact.
+ *
+ * CSS `path('M ...')` uses pixels of the border box, so the viewBox is the element's own
+ * size, 1:1.
+ *
+ * `{ d, fit }` is the library's sim-aware form. SVG's `meet` and `slice` are the same maths
+ * as `fit: 'contain'` and `'cover'`, measured against the path's tight bounding box.
  */
 (() => {
   const NS = 'http://www.w3.org/2000/svg';

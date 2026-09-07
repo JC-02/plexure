@@ -26,7 +26,7 @@ function still(host: HTMLElement, options: PlexureInput = {}): PlexureInstance {
   return field;
 }
 
-/** Dots only — links removed so painted pixels reflect particle positions alone. */
+/** Dots only. Links are removed, so painted pixels reflect particle positions alone. */
 const DOTS_ONLY: PlexureInput = { link: { opacity: 0 }, cursor: { enabled: false } };
 
 describe('determinism', () => {
@@ -336,7 +336,7 @@ describe('spatial hash', () => {
   });
 });
 
-describe('Path2D clipping — mask only', () => {
+describe('Path2D clipping: mask only', () => {
   // A bare Path2D clips the *render* alone: the simulation keeps running in the full
   // bounding box, so particles drift out of the shape and disappear at its edge. The
   // shape-aware form (`clipTo: { path }`) is covered in shape.test.ts; these assertions

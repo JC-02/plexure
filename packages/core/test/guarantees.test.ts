@@ -247,7 +247,7 @@ describe('bad input degrades instead of throwing', () => {
 
   /**
    * The cursor's nearest-k buffer only runs while the pointer is inside the field, so this
-   * needs a real hover — the cases above would never reach it. Asking for zero links used
+   * needs a real hover. The cases above would never reach it. Asking for zero links used
    * to read best[-1] and take the field down three frames later.
    */
   it.each([

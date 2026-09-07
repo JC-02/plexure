@@ -1,7 +1,7 @@
 {
   "name": "@plexure/react",
   "version": "0.1.0",
-  "description": "React bindings for plexure — a drifting field of points connected by lines, reacting to the pointer.",
+  "description": "React bindings for plexure, a drifting field of points connected by lines, reacting to the pointer.",
   "license": "MIT",
   "author": "Jordan Cowan (https://github.com/JC-02)",
   "homepage": "https://plexure.dev",

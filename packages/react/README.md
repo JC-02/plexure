@@ -9,7 +9,7 @@ import { Plexure } from '@plexure/react';
 <Plexure cursor={{ color: '#7fd4c1' }} />
 ```
 
-The wrapper is under 500 B and adds no behaviour of its own. Every option is the engine's
+The wrapper is under 1 kB and adds no behaviour of its own. Every option is the engine's
 [`PlexureOptions`](https://github.com/JC-02/plexure/blob/main/packages/core/src/types.ts),
 covered in the [engine's README](https://github.com/JC-02/plexure/tree/main/packages/core).
 

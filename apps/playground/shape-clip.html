@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>8 · Sim-aware shape clipping — plexure harness</title>
+  <title>8 · Sim-aware shape clipping · plexure harness</title>
   <link rel="stylesheet" href="harness.css" />
   <style>
     .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
@@ -144,7 +144,7 @@
     for (const fit of ['contain', 'cover', 'none']) {
       // 'none' leaves the star at its raw 100x100 coordinates, so the same count and link
       // distance that read well at full size collapse into a solid blob. Scale both down
-      // to keep the panel legible — the point being demonstrated is the placement.
+      // to keep the panel legible. What matters here is the placement.
       const raw = fit === 'none';
       panel(fits, fit, `clipTo: { path: STAR, fit: '${fit}' }`, {
         link: raw ? { distance: 26 } : undefined,

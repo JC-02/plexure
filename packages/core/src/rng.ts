@@ -1,4 +1,4 @@
-/** Mulberry32. Tiny, fast, good enough for layout — not for anything cryptographic. */
+/** Mulberry32. Tiny and fast. Good enough for layout, not for anything cryptographic. */
 export function createRng(seed: number | undefined): () => number {
   if (seed === undefined) return Math.random;
   let a = seed >>> 0;

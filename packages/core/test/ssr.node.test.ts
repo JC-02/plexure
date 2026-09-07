@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 /**
  * Invariant: no browser globals at module scope. This file runs in a real node
  * environment with no `window` and no `document`, which is the only place that claim can
- * be tested — importing the package on a server must never throw, and the handle it hands
+ * be tested. Importing the package on a server must never throw, and the handle it hands
  * back must be safe to call.
  */
 describe('SSR safety', () => {

@@ -45,8 +45,8 @@ const EDGE_CLAMP = 0.15;
 
 /**
  * Elements marked data-plexure-ignore (or inside one) suppress the pointer reaction while
- * hovered — for controls or content the field should not respond to. closest() is a pure
- * DOM-tree walk: no layout read.
+ * hovered. Use it for controls, or for content the field should not react to. closest() is
+ * a pure DOM-tree walk, so it reads no layout.
  */
 function isIgnored(target: EventTarget | null): boolean {
   const el = target as Element | null;
@@ -54,9 +54,9 @@ function isIgnored(target: EventTarget | null): boolean {
 }
 
 /**
- * Handle returned when there is nothing to render into — no DOM at all (SSR), or a DOM
- * without a working 2D canvas (jsdom and friends). Every call is a silent no-op, so host
- * code and test suites can treat it exactly like a live field.
+ * Handle returned when there is nothing to render into. That means no DOM at all under
+ * SSR, or a DOM without a working 2D canvas, like jsdom. Every call is a silent no-op, so
+ * host code and test suites can treat it like a live field.
  */
 export const inert: PlexureInstance = {
   setOptions() {},
@@ -223,7 +223,7 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
 
   function dprFor(): number {
     // Cap so width/height in device px stay under the safe canvas dimension limit
-    // (Chrome caps at 65,535, Safari lower) — matters for tall 'page' fields.
+    // (Chrome caps at 65,535, Safari lower). This matters for tall 'page' fields.
     let scale = Math.min(window.devicePixelRatio || 1, o.maxDpr);
     const maxDim = Math.max(width, height);
     if (maxDim * scale > 32000) scale = 32000 / maxDim;
@@ -248,8 +248,8 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
 
   /**
    * Inside the shape *and* inside the container. `fit: 'cover'` puts those in conflict on
-   * purpose — it overflows the box — and a particle in the overflow is inside the shape
-   * yet outside anything that can be seen. The cheap bounds test also short-circuits the
+   * purpose, and a particle in that overflow is inside the shape yet outside anything
+   * visible. The cheap bounds test also short-circuits the
    * path test for particles that have already left the box.
    */
   function contained(shape: Path2D, x: number, y: number): boolean {
@@ -289,10 +289,10 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
   }
 
   /**
-   * Estimate the shape's area on a fixed grid, so `density` — square pixels of surface per
-   * particle — means the same thing inside a shape as it does in a plain box. Measured
-   * against the container instead, a star covering 40% of its box would render about two
-   * and a half times denser than an unclipped field with identical settings.
+   * Estimate the shape's area on a fixed grid. `density` is square pixels of surface per
+   * particle, and this keeps that meaning the same inside a shape as in a plain box.
+   * Measured against the container instead, a star covering 40% of its box would render
+   * about two and a half times denser than an unclipped field with the same settings.
    *
    * Deliberately a grid rather than random samples: it consumes no RNG, so a seeded field
    * stays reproducible across resizes.
@@ -402,7 +402,7 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
     return { prevW, prevH };
   }
 
-  /** Depends only on options and the cached box size — no layout reads. */
+  /** Depends only on options and the cached box size, so it reads no layout. */
   function resolveDistances(): void {
     const minEdge = Math.min(width, height);
     // Geometric mean: equals the edge for squares, but keeps link/cursor reach useful in
@@ -480,7 +480,7 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
   function pointerActive(): boolean {
     if (!pointer.entered || overIgnored || !o.cursor.enabled) return false;
     // A shape-aware field reacts only where it actually is. The host stays a rectangle, so
-    // without this the corners outside the shape still pull — dragging particles toward a
+    // without this the corners outside the shape still pull. That drags particles toward a
     // point they can never reach, which reads as the field twitching at nothing.
     if (simShape && !inShape(simShape, pointer.x, pointer.y)) return false;
     // Element fields react only while they own the pointer; viewport and page fields go
@@ -550,8 +550,8 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
 
       if (shape) {
         // Inside an arbitrary shape there is no opposite edge to wrap to, so 'wrap' and
-        // 'respawn' both re-place the particle inside — which preserves what wrapping was
-        // for, an evenly populated field rather than one bunching toward the centre.
+        // 'respawn' both re-place the particle inside. That keeps what wrapping was for,
+        // an evenly populated field rather than one bunching toward the centre.
         const inside = contained(shape, p.x, p.y);
         if (!inside) respawn(p);
         if (edgeBehaviour === 'fade') {
@@ -851,9 +851,9 @@ export function createField(target: PlexureTarget, input?: PlexureInput): Plexur
       overIgnored = false;
       releasePointer(token);
     });
-    // The rect is cached here, on entry, and on resize — never read on pointermove: one
-    // layout read per scroll frame instead of one per pointer event. Capture catches
-    // nested scrollers.
+    // The rect is cached here, on entry, and on resize. It is never read on pointermove,
+    // so that is one layout read per scroll frame instead of one per pointer event.
+    // Capture catches nested scrollers.
     listen(window, 'scroll', () => updateRect(), { passive: true, capture: true });
     ro = new ResizeObserver(() => scheduleResize());
     ro.observe(host);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>6 · Exclusions — plexure harness</title>
+  <title>6 · Exclusions · plexure harness</title>
   <link rel="stylesheet" href="harness.css" />
   <style>
     .demo { width: 460px; min-height: 300px; }
@@ -19,14 +19,15 @@
     <p>The canvas is always <code>pointer-events: none</code> and sits behind content, so it
     can never block clicks, selection, or focus. On top of that, anything marked
     <code>data-plexure-ignore</code> (dashed gold outline below) suppresses the hover
-    reaction while the pointer is on it — for controls or content the field should defer to.</p>
+    reaction while the pointer is on it. Use it for controls, or content the field should
+    defer to.</p>
 
-    <h2>Default behaviour — content above, field reacts everywhere</h2>
+    <h2>Default behaviour: content above, field reacts everywhere</h2>
     <div class="row">
       <div class="card demo" id="d1">
         <strong>No exclusions</strong>
         <p class="caption">Everything here is ordinary content. The field reacts even while
-        you hover the button or type in the input — and both keep working normally.</p>
+        you hover the button or type in the input, and both keep working.</p>
         <form onsubmit="return false" style="position:relative; z-index:1;">
           <button type="button" onclick="this.textContent='clicked ✓'">Click me</button>
           <input placeholder="type here" />
@@ -34,7 +35,7 @@
       </div>
     </div>
 
-    <h2>Excluded components — reaction stops over the marked zones</h2>
+    <h2>Excluded components: reaction stops over the marked zones</h2>
     <div class="row">
       <div class="card demo" id="d2">
         <strong>Interactive exclusions</strong>
@@ -51,7 +52,7 @@
         reaction even though the panel does nothing itself. Children inherit the marker.</p>
         <div class="panel ignored" data-plexure-ignore style="position:relative; z-index:1;">
           <strong>Stats panel (ignored)</strong>
-          <p class="caption">uptime 99.99% · nodes 84 · links 212<br/>hover me — the field goes calm</p>
+          <p class="caption">uptime 99.99% · nodes 84 · links 212<br/>hover me, the field goes calm</p>
         </div>
       </div>
     </div>
@@ -59,7 +60,7 @@
     <h2>Edge cases to poke</h2>
     <p class="note">
       Drag a text selection that starts outside an ignored zone and ends inside it ·
-      tab-focus the ignored input via keyboard (reaction should NOT stop — it's pointer-based) ·
+      tab-focus the ignored input via keyboard (reaction should NOT stop, it is pointer-based) ·
       move quickly on/off the zone boundary and watch for flicker.
     </p>
   </main>

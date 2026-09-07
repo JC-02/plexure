@@ -11,9 +11,9 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
  * Measuring costs a forced layout, and `measure()` runs on every resize and every
- * `refresh()`. Path data does not change between those calls, so the result is cached —
- * without this a single refresh costs ~6 ms, and a window resize multiplies that by every
- * field on the page.
+ * `refresh()`. Path data does not change between those calls, so the result is cached.
+ * Without the cache a single refresh costs about 6 ms, and a resize multiplies that by
+ * every field on the page.
  */
 const boundsCache = new Map<string, [number, number, number, number] | null>();
 const CACHE_MAX = 64;
@@ -82,7 +82,7 @@ export function windowsPath(elements: Element[], originX: number, originY: numbe
 /**
  * `Path2D` exposes no bounds, so measure through a throwaway SVG element instead.
  * `getBBox()` silently returns zeros while the element is detached, so it has to be in the
- * document — a hidden, zero-size `<svg>` measures without contributing to layout.
+ * document. A hidden, zero-size `<svg>` measures without contributing to layout.
  */
 function measurePath(d: string): [number, number, number, number] | null {
   const hit = boundsCache.get(d);

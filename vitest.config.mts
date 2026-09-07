@@ -12,9 +12,9 @@ const coreSrc = fileURLToPath(new URL('./packages/core/src/index.ts', import.met
 /**
  * Two projects, deliberately.
  *
- * `node` runs where `window` and `document` do not exist — the only place the SSR guard
- * (an invariant: importing the package must never throw on a server) can actually be
- * tested, plus the pure-logic modules that have no business needing a DOM.
+ * `node` runs where `window` and `document` do not exist. That is the only place the SSR
+ * guard can be tested, since importing the package must never throw on a server. It also
+ * covers the pure-logic modules that have no business needing a DOM.
  *
  * `browser` runs everything else in real headless chromium. The library is canvas-first;
  * jsdom has no canvas, so mocking it would mean asserting against the mock rather than

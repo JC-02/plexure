@@ -76,7 +76,8 @@ Or skip the build step:
 <script src="https://unpkg.com/plexure"></script>
 ```
 
-~6 kB gzipped, zero dependencies. ESM, CJS, and a `<script>`-tag global. Typed options.
+Under 10 kB gzipped, zero dependencies. ESM, CJS, and a `<script>`-tag global. Typed
+options.
 Safe to import on a server.
 
 ## The handle

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3 · Containers — plexure harness</title>
+  <title>3 · Containers · plexure harness</title>
   <link rel="stylesheet" href="harness.css" />
   <style>
     .demo-card { width: 300px; height: 260px; }
@@ -55,7 +55,7 @@
       </div>
     </div>
 
-    <h2>Independent siblings — only one reacts at a time</h2>
+    <h2>Independent siblings: only one reacts at a time</h2>
     <p class="note">Move the pointer between the three. Exactly the hovered card's field
     reacts; the other two keep drifting undisturbed.</p>
     <div class="row">
@@ -64,7 +64,7 @@
       <div class="card demo-card" id="sib-3"><strong>Card 3</strong></div>
     </div>
 
-    <h2>Joined group — one unified field behind several containers</h2>
+    <h2>Joined group: one unified field behind several containers</h2>
     <p class="note">A single field is mounted on the group wrapper; the "cards" are
     translucent, so one continuous constellation flows behind all of them and through the
     gaps. Links should cross card boundaries seamlessly, and the pointer works across the
@@ -75,7 +75,7 @@
       <div class="ghost"><strong>Gamma</strong><p class="caption">Hover anywhere in the group.</p></div>
     </div>
 
-    <h2>Windowed group — one unified field showing through separate containers</h2>
+    <h2>Windowed group: one unified field showing through separate containers</h2>
     <p class="note">The inverse of the joined group: one field spans the whole wrapper, and
     <code>clipTo: { windows: '.window' }</code> shows it only <em>inside</em> the three
     windows. The gaps show nothing. Watch a particle drift out of one window and re-appear in

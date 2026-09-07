@@ -1,8 +1,8 @@
 # plexure
 
 A drifting field of points connected by lines, reacting to the pointer. It goes where you
-put it. A hero, a card, an odd shape, or several containers sharing one field. ~6 kB
-gzipped, zero dependencies.
+put it. A hero, a card, an odd shape, or several containers sharing one field.
+Lightweight and dependency-free, under 10 kB gzipped.
 
 <!-- TODO(demo): drop the GIF here once recorded, using an absolute raw.githubusercontent
      URL so it survives being rendered outside GitHub. -->
@@ -10,7 +10,7 @@ gzipped, zero dependencies.
 | Package | |
 |---|---|
 | [`plexure`](packages/core) | The engine. Zero dependencies. |
-| [`@plexure/react`](packages/react) | A component wrapper, under 500 B. |
+| [`@plexure/react`](packages/react) | A component wrapper, under 1 kB. |
 
 Docs and playground: [plexure.dev](https://plexure.dev) *(coming soon)*
 

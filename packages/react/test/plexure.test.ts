@@ -10,8 +10,8 @@ import { Plexure, type PlexureProps } from '../src/index';
 
 /**
  * The component talks to the core field through `fieldRef`, not through the imperative
- * handle it exposes — so spying on the ref would never observe what the effects actually
- * do. This wraps the factory instead and records every field the component creates.
+ * handle it exposes. Spying on the ref would never observe what the effects do. This
+ * wraps the factory instead and records every field the component creates.
  */
 const { created } = vi.hoisted(() => ({ created: [] as PlexureInstance[] }));
 
@@ -197,7 +197,7 @@ describe('option updates', () => {
     const { rerender } = render(createElement(Plexure, { ...FILL, count: 20 }));
     const spy = vi.spyOn(lastField(), 'setOptions');
 
-    // A new object literal with identical content — the serialised key should absorb it.
+    // A new object literal with identical content. The serialised key should absorb it.
     rerender(createElement(Plexure, { ...FILL, count: 20 }));
     expect(spy).not.toHaveBeenCalled();
   });
@@ -217,8 +217,8 @@ describe('option updates', () => {
     const { rerender } = render(createElement(Plexure, { ...FILL, clipTo: first }));
     const spy = vi.spyOn(lastField(), 'setOptions');
 
-    // A Path2D does not JSON-serialise, so the serialised key cannot see this change —
-    // identity is deped separately, and that is what this guards.
+    // A Path2D does not JSON-serialise, so the serialised key cannot see this change.
+    // Identity is deped separately, and that is what this guards.
     const second = new Path2D();
     second.rect(0, 0, 50, 50);
     rerender(createElement(Plexure, { ...FILL, clipTo: second }));

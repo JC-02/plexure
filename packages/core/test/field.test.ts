@@ -28,7 +28,7 @@ describe('canvas', () => {
     expect(canvasIn(host).tagName).toBe('CANVAS');
   });
 
-  // "The canvas never interferes" — these four are load-bearing for the whole pitch.
+  // "The canvas never interferes". These four are load-bearing for the whole pitch.
   it('is inert to pointers, hidden from assistive tech, and clipped to its box', () => {
     const host = mountHost();
     track(createPlexure(host));
@@ -138,7 +138,7 @@ describe('host positioning', () => {
     const field = createPlexure(host);
     expect(host.style.position).toBe('absolute');
     field.destroy();
-    // Not ours to clear — we never set it.
+    // Not ours to clear, because we never set it.
     expect(host.style.position).toBe('absolute');
   });
 });
@@ -486,7 +486,7 @@ describe('cursor.mode', () => {
   /**
    * Mean distance from the pointer across every particle, read from the arcs drawn in one
    * still frame. Drift is zero and friction is 1, so the cursor force is the only thing
-   * that can move a particle — the direction of the change is entirely down to the mode.
+   * that can move a particle, so the direction of the change is down to the mode alone.
    */
   async function meanDistanceFromPointer(
     mode: 'attract' | 'repel',

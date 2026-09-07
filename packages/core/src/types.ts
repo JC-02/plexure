@@ -54,16 +54,16 @@ export interface CursorOptions {
 export type ClipFit = 'contain' | 'cover' | 'none';
 
 /**
- * A shape the field is confined to — not just drawn through. Particles are seeded inside
- * it and re-placed inside when they leave, so the simulation itself is shape-aware.
+ * A shape the field is confined to, rather than drawn through. Particles start inside it
+ * and get put back inside when they leave.
  */
 export interface ShapeClip {
   /** SVG path data (`'M 0 0 L 100 0 …'`), or a `Path2D` in its own coordinate space. */
   path: string | Path2D;
   /**
    * Defaults to `'contain'`. Needs the shape's bounds, which are measured automatically
-   * from SVG path data. A `Path2D` carries no bounds, so supply `viewBox` for it —
-   * without one, the path is used as-is in container pixels (`'none'`).
+   * from SVG path data. A `Path2D` carries no bounds, so supply `viewBox` for one.
+   * Without it the path is used as-is in container pixels, the same as `'none'`.
    */
   fit?: ClipFit;
   /** `[x, y, width, height]` of the shape's coordinate space. */
@@ -115,7 +115,7 @@ export interface PlexureOptions {
   /**
    * Confine the field to a shape. A string is applied as a CSS `clip-path` on the canvas
    * (`polygon(...)`, `circle(...)`, `url(#svgClip)`, ...). A `Path2D` is clipped in-canvas,
-   * in CSS pixel coordinates of the container. Both of those clip the *render* only — the
+   * in CSS pixel coordinates of the container. Both clip the *render* only. The
    * simulation still runs in the full bounding box.
    *
    * A {@link ShapeClip} object clips the *simulation* too: particles are seeded inside the

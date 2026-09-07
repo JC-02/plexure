@@ -164,7 +164,7 @@ describe('claim stack', () => {
     const outer = track(createPlexure(outerHost, { count: 80, maxDpr: 1 }));
     const inner = track(createPlexure(innerHost, { count: 80, maxDpr: 1 }));
 
-    // Inner claims first, then outer — the reverse of the natural enter order.
+    // Inner claims first, then outer, the reverse of the natural enter order.
     pointerAt(innerHost, 'pointerenter', 100, 75);
     pointerAt(outerHost, 'pointerenter', 100, 75);
 

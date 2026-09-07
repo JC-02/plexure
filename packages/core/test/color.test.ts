@@ -16,7 +16,7 @@ afterEach(() => {
   for (const h of hosts.splice(0)) h.remove();
 });
 
-describe('parseColor — literal formats', () => {
+describe('parseColor: literal formats', () => {
   it('parses long hex', () => {
     expect(parseColor('#EBE9E4', null)).toEqual({ rgb: '235, 233, 228', a: 1 });
   });
@@ -70,7 +70,7 @@ describe('parseColor — literal formats', () => {
   });
 });
 
-describe('parseColor — invalid input', () => {
+describe('parseColor: invalid input', () => {
   // Falling back to white rather than black is deliberate: a mistyped colour should be
   // visible on the dark backgrounds this library is usually mounted on, not invisible.
   it.each(['not-a-colour', '', '#12345', 'rgb(300)', 'var(', '#'])(
@@ -85,7 +85,7 @@ describe('parseColor — invalid input', () => {
   });
 });
 
-describe('parseColor — custom properties', () => {
+describe('parseColor: custom properties', () => {
   it('resolves var() against the host element', () => {
     const host = hostWith({ '--brand': '#ff0000' });
     expect(parseColor('var(--brand)', host).rgb).toBe('255, 0, 0');
@@ -144,7 +144,7 @@ describe('parseColor — custom properties', () => {
   });
 });
 
-describe('parseColor — caching', () => {
+describe('parseColor: caching', () => {
   it('returns a cached result for a repeated literal', () => {
     const a = parseColor('#0a0b0c', null);
     const b = parseColor('#0a0b0c', null);

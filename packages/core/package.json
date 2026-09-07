@@ -1,7 +1,7 @@
 {
   "name": "plexure",
   "version": "0.1.0",
-  "description": "A drifting field of points connected by lines, reacting to the pointer. Scope it to the viewport, a page, any element, or an arbitrary shape. ~6 kB, zero dependencies.",
+  "description": "A drifting field of points connected by lines, reacting to the pointer. Scope it to the viewport, a page, any element, or an arbitrary shape. Lightweight and dependency-free, under 10 kB gzipped.",
   "license": "MIT",
   "author": "Jordan Cowan (https://github.com/JC-02)",
   "homepage": "https://plexure.dev",

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createPlexure } from '../src/index';
 
 /**
- * jsdom is where other people's tests run — vitest, jest and React Testing Library all
+ * jsdom is where other people's tests run. Vitest, jest and React Testing Library all
  * default to it. It has a DOM but no matchMedia, no ResizeObserver and no canvas, so a
  * field cannot render there. Mounting one must still be completely uneventful: nobody
  * should have to mock this library to unit-test the component that uses it.

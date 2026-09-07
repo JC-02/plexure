@@ -176,7 +176,7 @@ describe('sim-aware shape: containment over time', () => {
 
   /**
    * `wrap` re-places particles inside the shape, and thin extremities lose particles faster
-   * than the body does — so occupancy drifts inward and settles somewhat below uniform.
+   * than the body does, so occupancy drifts inward and settles below uniform.
    * Measured on a star it stabilises around a 0.35 outer share rather than collapsing.
    * This guards the "settles" half: the points of a shape must stay populated.
    */
@@ -267,7 +267,7 @@ describe('sim-aware shape: the pointer follows the shape, not the box', () => {
   }
 
   // The host element stays a rectangle, so without an explicit test the corners outside the
-  // shape still pull — dragging particles toward a point they can never reach, which reads
+  // shape still pull, dragging particles toward a point they can never reach, which reads
   // as the field twitching at nothing.
   it('does not react to a pointer outside the shape', () => {
     const host = mountHost(300, 300);
@@ -413,7 +413,7 @@ describe('sim-aware shape: fit', () => {
 
   // 'cover' deliberately overflows the container, so the shape's bounding box extends past
   // what the canvas can show. Seeding across the whole shape box would throw away every
-  // particle that landed in the overflow — on a 600x300 container, about half of them.
+  // particle that landed in the overflow. On a 600x300 container, about half of them.
   it("'cover' seeds every particle where it can actually be seen", () => {
     const host = mountHost(600, 300);
     const field = still(host, {

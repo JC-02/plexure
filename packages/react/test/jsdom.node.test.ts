@@ -12,7 +12,7 @@ import { Plexure } from '../src/index';
 /**
  * The scenario that actually matters for adoption: someone unit-tests a page that happens
  * to contain a <Plexure />, in the jsdom environment every React project defaults to.
- * Rendering it must be a non-event — no mock, no setup file, no crash.
+ * Rendering it must be a non-event. No mock, no setup file, no crash.
  */
 const roots: Array<() => void> = [];
 

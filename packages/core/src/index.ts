@@ -20,10 +20,10 @@ export type {
 /**
  * Mount a plexure field.
  *
- * Returns an inert handle — safe to call, renders nothing — in any environment that cannot
- * actually paint: a server with no DOM, or a simulated DOM such as jsdom, which is what
- * consumers' own unit tests run in. Mounting a field must never be the reason someone
- * else's test suite fails, so this degrades instead of throwing.
+ * Anywhere it cannot paint, this returns an inert handle. Every method is safe to call and
+ * nothing renders. That covers a server with no DOM, and a simulated DOM like jsdom, where
+ * most consumers run their own tests. Mounting a field should never be the reason someone
+ * else's test suite fails.
  *
  * @param target An element to scope the field to, `'viewport'` for a fixed full-viewport
  * field, or `'page'` for one spanning the full scrollable document.

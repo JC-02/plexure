@@ -62,8 +62,8 @@ export function countCalls(method: keyof Ctx2D, fn: () => void): number {
 }
 
 /**
- * Count calls to a 2D context method over a span of real time — the only way to assert
- * that a paused or destroyed field draws *nothing*, which needs frames to actually elapse.
+ * Count calls to a 2D context method over a span of real time. That is the only way to
+ * assert a paused or destroyed field draws *nothing*, which needs frames to elapse.
  */
 export async function countCallsOver(method: keyof Ctx2D, ms: number): Promise<number> {
   const proto = CanvasRenderingContext2D.prototype as unknown as Record<string, unknown>;
@@ -115,7 +115,7 @@ export function particleCount(field: PlexureInstance): number {
 
 /**
  * Number of links drawn from a particle back to the pointer, identified by the lineTo that
- * terminates at the pointer's own coordinates — particle-to-particle links never do.
+ * terminates at the pointer's own coordinates. Particle-to-particle links never do.
  */
 export function cursorLinks(field: PlexureInstance, px: number, py: number): number {
   field.pause();
@@ -136,8 +136,8 @@ export interface CanvasSample {
 
 /**
  * Derived metrics rather than a pixel hash: these survive antialiasing differences between
- * platforms while still catching the regressions that matter — nothing drawn, wrong scale,
- * clip ignored, field drifting out of its box.
+ * platforms while still catching the regressions that matter. Nothing drawn, wrong scale,
+ * clip ignored, or the field drifting out of its box.
  */
 export function sample(canvas: HTMLCanvasElement, alphaFloor = 8): CanvasSample {
   const ctx = canvas.getContext('2d');
